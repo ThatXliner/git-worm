@@ -51,3 +51,37 @@ def test_new_with_from_ref(git_repo, capsys):
     result = cli.root_command.execute(["new", "feat-from", "--from-ref", "HEAD~1"])
     assert result == 0
     assert (git_repo / ".worktrees" / "feat-from").exists()
+
+
+def test_rm_removes_worktree(git_repo, capsys):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-rm"])
+    assert (git_repo / ".worktrees" / "feat-rm").exists()
+
+    result = cli.root_command.execute(["rm", "feat-rm"])
+    assert result == 0
+    assert not (git_repo / ".worktrees" / "feat-rm").exists()
+
+
+def test_rm_dirty_worktree_without_force(git_repo, capsys):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-dirty"])
+    (git_repo / ".worktrees" / "feat-dirty" / "untracked.txt").write_text("dirty")
+
+    result = cli.root_command.execute(["rm", "feat-dirty"])
+    assert result != 0
+
+
+def test_rm_dirty_worktree_with_force(git_repo, capsys):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-force"])
+    (git_repo / ".worktrees" / "feat-force" / "untracked.txt").write_text("dirty")
+
+    result = cli.root_command.execute(["rm", "feat-force", "--force"])
+    assert result == 0
+
+
+def test_rm_nonexistent_worktree(git_repo, capsys):
+    cli = _make_cli()
+    result = cli.root_command.execute(["rm", "nonexistent"])
+    assert result != 0
