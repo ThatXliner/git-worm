@@ -1,18 +1,19 @@
 from pathlib import Path
+from typing import Annotated
 
 import rich
 
 from git_werk.config import load_config
 from git_werk.files import copy_ignored_files
 from git_werk.worktree import add_worktree, find_repo_root
-from xclif import command
+from xclif import Option, command
 
 
 @command()
-def _(branch: str, from_ref: str = "") -> None:
+def _(branch: str, from_ref: Annotated[str, Option(name="from")] = "") -> None:
     """Create a new worktree for a branch.
 
-    BRANCH is the branch name to check out (or create with --from-ref).
+    BRANCH is the branch name to check out (or create with --from).
     """
     repo = find_repo_root()
     config = load_config(repo / ".git-werk.toml")

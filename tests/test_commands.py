@@ -48,7 +48,7 @@ def test_new_with_from_ref(git_repo, capsys):
         cwd=git_repo, check=True, capture_output=True,
     )
     cli = _make_cli()
-    result = cli.root_command.execute(["new", "feat-from", "--from-ref", "HEAD~1"])
+    result = cli.root_command.execute(["new", "feat-from", "--from", "HEAD~1"])
     assert result == 0
     assert (git_repo / ".worktrees" / "feat-from").exists()
 
