@@ -4,7 +4,7 @@ import rich
 
 from git_werk.config import load_config
 from git_werk.files import copy_ignored_files
-from git_werk.worktree import add_worktree
+from git_werk.worktree import add_worktree, find_repo_root
 from xclif import command
 
 
@@ -14,7 +14,7 @@ def _(branch: str, from_ref: str = "") -> None:
 
     BRANCH is the branch name to check out (or create with --from-ref).
     """
-    repo = _find_repo_root()
+    repo = find_repo_root()
     config = load_config(repo / ".git-werk.toml")
     worktree_dir = config.worktree_dir if config else ".worktrees"
     wt_path = repo / worktree_dir / branch
@@ -48,16 +48,3 @@ def _(branch: str, from_ref: str = "") -> None:
                 rich.print(f"  [dim]{icon} {r['name']} ({r['action']})[/dim]")
             else:
                 rich.print(f"  {icon} {r['name']} ({r['action']})")
-
-
-def _find_repo_root() -> Path:
-    """Find the git repo root from cwd."""
-    import subprocess
-
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return Path(result.stdout.strip())

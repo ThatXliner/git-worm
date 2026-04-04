@@ -61,6 +61,17 @@ def list_worktrees() -> list[dict[str, str]]:
     return worktrees
 
 
+def find_repo_root() -> Path:
+    """Find the git repo root from cwd."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return Path(result.stdout.strip())
+
+
 def is_dirty(path: Path) -> bool:
     """Check if a worktree has uncommitted changes."""
     result = subprocess.run(

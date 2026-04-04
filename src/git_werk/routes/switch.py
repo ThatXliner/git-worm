@@ -3,6 +3,7 @@ from pathlib import Path
 import rich
 
 from git_werk.config import load_config
+from git_werk.worktree import find_repo_root
 from xclif import command
 
 
@@ -12,7 +13,7 @@ def _(branch: str) -> None:
 
     BRANCH is the name of the worktree to switch to.
     """
-    repo = _find_repo_root()
+    repo = find_repo_root()
     config = load_config(repo / ".git-werk.toml")
     worktree_dir = config.worktree_dir if config else ".worktrees"
     wt_path = repo / worktree_dir / branch
@@ -22,15 +23,3 @@ def _(branch: str) -> None:
         return 1
 
     rich.print(f"Worktree for [bold]{branch}[/bold] @ [bold]{wt_path}[/bold]")
-
-
-def _find_repo_root() -> Path:
-    import subprocess
-
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return Path(result.stdout.strip())
