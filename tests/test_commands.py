@@ -85,3 +85,45 @@ def test_rm_nonexistent_worktree(git_repo, capsys):
     cli = _make_cli()
     result = cli.root_command.execute(["rm", "nonexistent"])
     assert result != 0
+
+
+def test_list_shows_worktrees(git_repo, capsys):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-list"])
+
+    result = cli.root_command.execute(["list"])
+    assert result == 0
+    out = capsys.readouterr().out
+    assert "feat-list" in out
+
+
+def test_list_empty(git_repo, capsys):
+    cli = _make_cli()
+    result = cli.root_command.execute(["list"])
+    assert result == 0
+
+
+def test_switch_prints_path(git_repo, capsys):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-switch"])
+
+    result = cli.root_command.execute(["switch", "feat-switch"])
+    assert result == 0
+    out = capsys.readouterr().out
+    assert str(git_repo / ".worktrees" / "feat-switch") in out.replace("\n", "")
+
+
+def test_switch_nonexistent(git_repo, capsys):
+    cli = _make_cli()
+    result = cli.root_command.execute(["switch", "nonexistent"])
+    assert result != 0
+
+
+def test_shell_init_outputs_function(git_repo, capsys):
+    cli = _make_cli()
+    result = cli.root_command.execute(["shell-init"])
+    assert result == 0
+    out = capsys.readouterr().out
+    assert "werk()" in out or "werk ()" in out
+    assert "cd" in out
+    assert "git-werk" in out
