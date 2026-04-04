@@ -1,7 +1,7 @@
 import rich
 from rich.tree import Tree
 
-from git_werk.worktree import list_worktrees, is_dirty
+from git_werk.worktree import list_worktrees, is_dirty, is_merged
 from xclif import command
 
 from pathlib import Path
@@ -29,7 +29,12 @@ def _() -> None:
             label = f"[bold]{branch}[/bold] [dim]{path}[/dim] [yellow](detached)[/yellow]"
         else:
             dirty = is_dirty(Path(path))
-            status = " [red]*dirty*[/red]" if dirty else ""
+            merged = is_merged(branch)
+            status = ""
+            if dirty:
+                status += " [red]*dirty*[/red]"
+            if merged:
+                status += " [green](merged)[/green]"
             label = f"[bold]{branch}[/bold] [dim]{path}[/dim]{status}"
 
         tree.add(label)

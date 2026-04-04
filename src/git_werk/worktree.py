@@ -72,6 +72,18 @@ def find_repo_root() -> Path:
     return Path(result.stdout.strip())
 
 
+def is_merged(branch: str) -> bool:
+    """Check if a branch has been merged into the current HEAD."""
+    result = subprocess.run(
+        ["git", "branch", "--merged", "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    merged = {line.strip().lstrip("* ") for line in result.stdout.splitlines()}
+    return branch in merged
+
+
 def is_dirty(path: Path) -> bool:
     """Check if a worktree has uncommitted changes."""
     result = subprocess.run(
