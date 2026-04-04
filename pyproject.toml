@@ -1,0 +1,30 @@
+[project]
+name = "git-werk"
+version = "0.1.0"
+description = "A better git worktree manager"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "xclif @ file:///Users/bryanhu/Developer/current/XClif/xclif",
+]
+
+[project.scripts]
+git-werk = "git_werk.__main__:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/git_werk"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
