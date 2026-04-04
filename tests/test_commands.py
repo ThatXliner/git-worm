@@ -127,3 +127,34 @@ def test_shell_init_outputs_function(git_repo, capsys):
     assert "werk()" in out or "werk ()" in out
     assert "cd" in out
     assert "git-werk" in out
+
+
+def test_full_workflow(git_repo, capsys):
+    """End-to-end: new -> list -> switch -> rm."""
+    (git_repo / ".gitignore").write_text(".env\n")
+    subprocess.run(["git", "add", ".gitignore"], cwd=git_repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "gitignore"],
+        cwd=git_repo, check=True, capture_output=True,
+    )
+    (git_repo / ".env").write_text("DB_URL=localhost")
+
+    cli = _make_cli()
+
+    # new
+    assert cli.root_command.execute(["new", "feat-e2e"]) == 0
+    assert (git_repo / ".worktrees" / "feat-e2e" / ".env").read_text() == "DB_URL=localhost"
+    capsys.readouterr()
+
+    # list
+    assert cli.root_command.execute(["list"]) == 0
+    assert "feat-e2e" in capsys.readouterr().out
+
+    # switch
+    assert cli.root_command.execute(["switch", "feat-e2e"]) == 0
+    out = capsys.readouterr().out.replace("\n", "")
+    assert str(git_repo / ".worktrees" / "feat-e2e") in out
+
+    # rm
+    assert cli.root_command.execute(["rm", "feat-e2e"]) == 0
+    assert not (git_repo / ".worktrees" / "feat-e2e").exists()
