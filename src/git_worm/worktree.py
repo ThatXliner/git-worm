@@ -73,14 +73,19 @@ def find_repo_root() -> Path:
 
 
 def is_merged(branch: str) -> bool:
-    """Check if a branch has been merged into the current HEAD."""
+    """Check if a branch has been merged into the main branch (not itself)."""
     result = subprocess.run(
         ["git", "branch", "--merged", "HEAD"],
         check=True,
         capture_output=True,
         text=True,
     )
-    merged = {line.strip().lstrip("* ") for line in result.stdout.splitlines()}
+    # Exclude the current branch (prefixed with '*') — it's not "merged", it IS HEAD
+    merged = {
+        line.strip().lstrip("* ")
+        for line in result.stdout.splitlines()
+        if not line.startswith("*")
+    }
     return branch in merged
 
 
