@@ -12,7 +12,7 @@ wheels = [
 ]
 
 [[package]]
-name = "git-werk"
+name = "git-worm"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
@@ -136,7 +136,7 @@ wheels = [
 
 [[package]]
 name = "xclif"
-version = "0.1.1"
+version = "0.2.0"
 source = { directory = "../xclif" }
 dependencies = [
     { name = "platformdirs" },

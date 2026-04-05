@@ -17,11 +17,12 @@ def _() -> None:
         return
 
     tree = Tree("[bold]Worktrees[/bold]")
-    for wt in worktrees:
+    for i, wt in enumerate(worktrees):
         path = wt["path"]
         branch = wt.get("branch", wt.get("head", "???")[:8])
         is_bare = wt.get("bare") == "true"
         is_detached = wt.get("detached") == "true"
+        is_primary = i == 0
 
         if is_bare:
             label = f"[dim]{path}[/dim] [italic](bare)[/italic]"
@@ -32,10 +33,11 @@ def _() -> None:
             merged = is_merged(branch)
             status = ""
             if dirty:
-                status += " [red]*dirty*[/red]"
+                status += " [red][italic]dirty[/italic][/red]"
             if merged:
                 status += " [green](merged)[/green]"
-            label = f"[bold]{branch}[/bold] [dim]{path}[/dim]{status}"
+            branch_fmt = f"[bold blue]{branch}[/bold blue]" if is_primary else f"[bold]{branch}[/bold]"
+            label = f"{branch_fmt} [dim]{path}[/dim]{status}"
 
         tree.add(label)
 
