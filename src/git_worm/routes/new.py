@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Annotated
 
 import rich
@@ -6,18 +5,20 @@ import rich
 from git_worm.config import load_config
 from git_worm.files import copy_ignored_files
 from git_worm.worktree import add_worktree, find_repo_root
-from xclif import Option, command
+from xclif import Arg, Option, WithConfig, command
 
 
 @command()
-def _(branch: str, from_ref: Annotated[str, Option(name="from")] = "") -> None:
-    """Create a new worktree for a branch.
-
-    BRANCH is the branch name to check out (or create with --from).
-    """
+def _(
+    branch: Annotated[str, Arg(description="Branch name to check out (or create with --from)")],
+    from_ref: Annotated[str, Option(name="from", description="Create branch from this ref")] = "",
+    worktree_dir: WithConfig[str] = ".worktrees",
+) -> None:
+    """Create a new worktree for a branch."""
     repo = find_repo_root()
     config = load_config(repo / ".git-worm.toml")
-    worktree_dir = config.worktree_dir if config else ".worktrees"
+    if config:
+        worktree_dir = config.worktree_dir
     wt_path = repo / worktree_dir / branch
 
     if wt_path.exists():
