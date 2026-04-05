@@ -1,8 +1,8 @@
 import subprocess
 from pathlib import Path
 
-from git_werk.files import get_ignored_entries, copy_entry, should_skip_node_modules, copy_ignored_files
-from git_werk.config import ShareRule
+from git_worm.files import get_ignored_entries, copy_entry, should_skip_node_modules, copy_ignored_files
+from git_worm.config import ShareRule
 
 
 def test_get_ignored_entries(git_repo):

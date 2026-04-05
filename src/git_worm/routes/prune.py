@@ -10,7 +10,7 @@ def _() -> None:
     """Remove stale worktree administrative files.
 
     Runs `git worktree prune` to clean up refs for worktrees that have
-    been deleted manually without using `git werk rm`.
+    been deleted manually without using `git worm rm`.
     """
     result = subprocess.run(
         ["git", "worktree", "prune", "--verbose"],

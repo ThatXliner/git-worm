@@ -7,7 +7,7 @@ import subprocess
 from fnmatch import fnmatch
 from pathlib import Path
 
-from git_werk.config import ShareRule
+from git_worm.config import ShareRule
 
 EXCLUDED_NAMES = {".git", ".worktrees"}
 

@@ -3,7 +3,7 @@ import subprocess
 
 import pytest
 
-from git_werk import routes
+from git_worm import routes
 from xclif import Cli
 
 

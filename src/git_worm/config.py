@@ -1,4 +1,4 @@
-"""Parse .git-werk.toml configuration."""
+"""Parse .git-worm.toml configuration."""
 
 from __future__ import annotations
 

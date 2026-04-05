@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from git_werk.config import load_config, Config, ShareRule
+from git_worm.config import load_config, Config, ShareRule
 
 
 def test_load_config_no_file(tmp_path):
@@ -9,7 +9,7 @@ def test_load_config_no_file(tmp_path):
 
 
 def test_load_config_basic(tmp_path):
-    toml_file = tmp_path / ".git-werk.toml"
+    toml_file = tmp_path / ".git-worm.toml"
     toml_file.write_text("""\
 [settings]
 worktree_dir = "wt"
@@ -31,7 +31,7 @@ strategy = "ignore"
 
 
 def test_load_config_defaults(tmp_path):
-    toml_file = tmp_path / ".git-werk.toml"
+    toml_file = tmp_path / ".git-worm.toml"
     toml_file.write_text("""\
 [[share]]
 path = "target"
@@ -44,7 +44,7 @@ strategy = "symlink"
 
 
 def test_load_config_empty_settings(tmp_path):
-    toml_file = tmp_path / ".git-werk.toml"
+    toml_file = tmp_path / ".git-worm.toml"
     toml_file.write_text("""\
 [settings]
 """)

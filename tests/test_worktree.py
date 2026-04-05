@@ -1,6 +1,6 @@
 import subprocess
 
-from git_werk.worktree import add_worktree, remove_worktree, list_worktrees, is_dirty
+from git_worm.worktree import add_worktree, remove_worktree, list_worktrees, is_dirty
 
 
 def test_add_worktree_creates_directory(git_repo):

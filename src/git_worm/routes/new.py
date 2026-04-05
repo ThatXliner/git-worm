@@ -3,9 +3,9 @@ from typing import Annotated
 
 import rich
 
-from git_werk.config import load_config
-from git_werk.files import copy_ignored_files
-from git_werk.worktree import add_worktree, find_repo_root
+from git_worm.config import load_config
+from git_worm.files import copy_ignored_files
+from git_worm.worktree import add_worktree, find_repo_root
 from xclif import Option, command
 
 
@@ -16,7 +16,7 @@ def _(branch: str, from_ref: Annotated[str, Option(name="from")] = "") -> None:
     BRANCH is the branch name to check out (or create with --from).
     """
     repo = find_repo_root()
-    config = load_config(repo / ".git-werk.toml")
+    config = load_config(repo / ".git-worm.toml")
     worktree_dir = config.worktree_dir if config else ".worktrees"
     wt_path = repo / worktree_dir / branch
 

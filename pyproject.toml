@@ -1,5 +1,5 @@
 [project]
-name = "git-werk"
+name = "git-worm"
 version = "0.1.0"
 description = "A better git worktree manager"
 readme = "README.md"
@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.scripts]
-git-werk = "git_werk.__main__:cli"
+git-worm = "git_worm.__main__:cli"
 
 [build-system]
 requires = ["hatchling"]
@@ -19,7 +19,7 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/git_werk"]
+packages = ["src/git_worm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,7 +1,7 @@
 import rich
 from rich.tree import Tree
 
-from git_werk.worktree import list_worktrees, is_dirty, is_merged
+from git_worm.worktree import list_worktrees, is_dirty, is_merged
 from xclif import command
 
 from pathlib import Path

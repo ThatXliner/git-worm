@@ -1,6 +1,6 @@
 import subprocess
 
-from git_werk import routes
+from git_worm import routes
 from xclif import Cli
 
 
@@ -124,9 +124,9 @@ def test_shell_init_outputs_function(git_repo, capsys):
     result = cli.root_command.execute(["shell-init"])
     assert result == 0
     out = capsys.readouterr().out
-    assert "werk()" in out or "werk ()" in out
+    assert "worm()" in out or "worm ()" in out
     assert "cd" in out
-    assert "git-werk" in out
+    assert "git-worm" in out
 
 
 def test_full_workflow(git_repo, capsys):

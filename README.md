@@ -1,10 +1,10 @@
-# git-werk
+# git-worm
 
 A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/xclif).
 
 ## Why?
 
-`git worktree` is powerful but raw. git-werk adds:
+`git worktree` is powerful but raw. git-worm adds:
 
 - **Automatic file management** — gitignored files (`.env`, `.venv`, `node_modules`, etc.) are copied into new worktrees so switching feels like `git switch`
 - **Smart package manager detection** — pnpm/bun/Yarn PnP users don't get unnecessary `node_modules` copies
@@ -13,44 +13,44 @@ A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/
 ## Install
 
 ```bash
-pip install git-werk
+pip install git-worm
 ```
 
 Or with [uv](https://github.com/astral-sh/uv):
 
 ```bash
-uv tool install git-werk
+uv tool install git-worm
 ```
 
 ## Usage
 
 ```bash
 # Create a new worktree (copies .env, .venv, etc. automatically)
-git werk new feat-login
+git worm new feat-login
 
 # Create from a specific ref
-git werk new feat-login --from-ref main
+git worm new feat-login --from-ref main
 
 # List all worktrees
-git werk list
+git worm list
 
 # Print worktree path
-git werk switch feat-login
+git worm switch feat-login
 
 # Remove a worktree
-git werk rm feat-login
+git worm rm feat-login
 
 # Remove even if dirty
-git werk rm feat-login --force
+git worm rm feat-login --force
 
 # Shell integration (add to .bashrc/.zshrc)
-eval "$(git-werk shell-init)"
-# Then: werk switch feat-login  (auto-cds)
+eval "$(git-worm shell-init)"
+# Then: worm switch feat-login  (auto-cds)
 ```
 
 ## Configuration
 
-Optional `.git-werk.toml` in your repo root:
+Optional `.git-worm.toml` in your repo root:
 
 ```toml
 [settings]

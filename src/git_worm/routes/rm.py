@@ -2,8 +2,8 @@ from pathlib import Path
 
 import rich
 
-from git_werk.config import load_config
-from git_werk.worktree import find_repo_root, is_dirty, remove_worktree
+from git_worm.config import load_config
+from git_worm.worktree import find_repo_root, is_dirty, remove_worktree
 from xclif import command
 
 
@@ -14,7 +14,7 @@ def _(branch: str, force: bool = False) -> None:
     BRANCH is the name of the worktree to remove.
     """
     repo = find_repo_root()
-    config = load_config(repo / ".git-werk.toml")
+    config = load_config(repo / ".git-worm.toml")
     worktree_dir = config.worktree_dir if config else ".worktrees"
     wt_path = repo / worktree_dir / branch
 
