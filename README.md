@@ -12,6 +12,8 @@ A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/
 
 ## Install
 
+Note: this is for the future; we're not actually on PyPi just yet
+
 ```bash
 pip install git-worm
 ```
