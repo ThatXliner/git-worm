@@ -5,6 +5,7 @@ from __future__ import annotations
 import platform
 import shutil
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from fnmatch import fnmatch
 from pathlib import Path
 
@@ -221,20 +222,25 @@ def copy_ignored_files(
     If share_rules is provided, it replaces default behavior entirely.
     """
     entries = get_ignored_entries(src)
-    results = []
 
+    # Resolve strategies and filter entries
+    work: list[tuple[Path, str]] = []
     for entry in entries:
         name = entry.name
         if share_rules is not None:
             rule = _match_rule(name, share_rules)
             if rule is None:
-                # Config present but no rule matches -> skip
                 continue
             strategy = rule.strategy
         else:
             strategy = _default_strategy(entry, src)
+        work.append((entry, strategy))
 
-        result = copy_entry(entry, src, dst, strategy=strategy)
-        results.append(result)
+    if len(work) <= 3:
+        return [copy_entry(e, src, dst, strategy=s) for e, s in work]
 
-    return results
+    with ThreadPoolExecutor() as pool:
+        futures = [
+            pool.submit(copy_entry, e, src, dst, strategy=s) for e, s in work
+        ]
+        return [f.result() for f in futures]
