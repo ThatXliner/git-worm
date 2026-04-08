@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import platform
 import shutil
 import subprocess
 from fnmatch import fnmatch
@@ -10,6 +11,18 @@ from pathlib import Path
 from git_worm.config import ShareRule
 
 EXCLUDED_NAMES = {".git", ".worktrees"}
+_IS_MACOS = platform.system() == "Darwin"
+
+
+def _reflink_cmd(src: Path, dst: Path, *, recursive: bool = False) -> list[str]:
+    """Build a cp command that attempts copy-on-write cloning."""
+    if _IS_MACOS:
+        # macOS APFS: cp -c (clone)
+        flags = "-ac" if recursive else "-c"
+    else:
+        # Linux: cp --reflink=auto
+        flags = "-a --reflink=auto" if recursive else "--reflink=auto"
+    return ["cp", *flags.split(), str(src), str(dst)]
 
 
 def _has_tracked_files(repo: Path, directory: str) -> bool:
@@ -127,29 +140,28 @@ def copy_entry(
 
     if strategy == "reflink":
         if entry.is_dir():
-            # Try cp --reflink=auto, fall back to shutil.copytree
             try:
                 subprocess.run(
-                    ["cp", "-a", "--reflink=auto", str(entry), str(dst)],
+                    _reflink_cmd(entry, dst, recursive=True),
                     check=True,
                     capture_output=True,
                 )
-                return {"name": name, "action": "reflinked"}
+                return {"name": name, "action": "COW"}
             except (subprocess.CalledProcessError, FileNotFoundError):
                 shutil.copytree(entry, dst)
-                return {"name": name, "action": "copied (reflink unavailable)"}
+                return {"name": name, "action": "copied (COW unavailable)"}
         else:
             dst.parent.mkdir(parents=True, exist_ok=True)
             try:
                 subprocess.run(
-                    ["cp", "--reflink=auto", str(entry), str(dst)],
+                    _reflink_cmd(entry, dst),
                     check=True,
                     capture_output=True,
                 )
-                return {"name": name, "action": "reflinked"}
+                return {"name": name, "action": "COW"}
             except (subprocess.CalledProcessError, FileNotFoundError):
                 shutil.copy2(entry, dst)
-                return {"name": name, "action": "copied (reflink unavailable)"}
+                return {"name": name, "action": "copied (COW unavailable)"}
 
     return {"name": name, "action": f"unknown strategy: {strategy}"}
 
