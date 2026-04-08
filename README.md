@@ -12,16 +12,14 @@ A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/
 
 ## Install
 
-Note: this is for the future; we're not actually on PyPi just yet
-
 ```bash
-pip install git-worm
+pip install git+https://github.com/ThatXliner/git-worm.git
 ```
 
 Or with [uv](https://github.com/astral-sh/uv):
 
 ```bash
-uv tool install git-worm
+uv tool install git+https://github.com/ThatXliner/git-worm.git
 ```
 
 ## Usage
