@@ -110,7 +110,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "xclif", directory = "../xclif" }]
+requires-dist = [{ name = "xclif", git = "https://github.com/ThatXliner/xclif.git" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -239,30 +239,9 @@ wheels = [
 [[package]]
 name = "xclif"
 version = "0.2.0"
-source = { directory = "../xclif" }
+source = { git = "https://github.com/ThatXliner/xclif.git#81a87896c3a1c9fa8d01a47e7cc5a4e263a57b49" }
 dependencies = [
     { name = "platformdirs" },
     { name = "rich" },
     { name = "tomlkit" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "platformdirs", specifier = ">=4.0" },
-    { name = "rich", specifier = ">=14.0.0" },
-    { name = "tomlkit", specifier = ">=0.13" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "click", specifier = ">=8.3.1" },
-    { name = "pytest", specifier = ">=8.0" },
-    { name = "pytest-cov", specifier = ">=7.0.0" },
-    { name = "typer", specifier = ">=0.24.1" },
-]
-docs = [
-    { name = "furo", specifier = ">=2024.1.29" },
-    { name = "myst-parser", specifier = ">=3.0" },
-    { name = "sphinx", specifier = ">=8.0" },
-    { name = "sphinx-autobuild", specifier = ">=2024.0.0" },
 ]
