@@ -5,7 +5,7 @@ description = "A better git worktree manager"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "xclif @ file:///Users/bryanhu/Developer/current/XClif/xclif",
+    "xclif @ git+https://github.com/ThatXliner/xclif.git",
 ]
 
 [project.scripts]
