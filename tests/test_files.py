@@ -93,9 +93,25 @@ def test_should_skip_node_modules_bun(git_repo):
     assert should_skip_node_modules(git_repo) is True
 
 
+def test_should_skip_node_modules_bun_text_lock(git_repo):
+    (git_repo / "bun.lock").write_text("")
+    assert should_skip_node_modules(git_repo) is True
+
+
 def test_should_skip_node_modules_yarn_pnp(git_repo):
     (git_repo / "yarn.lock").write_text("")
     (git_repo / ".pnp.cjs").write_text("")
+    assert should_skip_node_modules(git_repo) is True
+
+
+def test_should_skip_node_modules_yarn_pnp_mjs(git_repo):
+    (git_repo / "yarn.lock").write_text("")
+    (git_repo / ".pnp.mjs").write_text("")
+    assert should_skip_node_modules(git_repo) is True
+
+
+def test_should_skip_node_modules_deno(git_repo):
+    (git_repo / "deno.lock").write_text("{}")
     assert should_skip_node_modules(git_repo) is True
 
 

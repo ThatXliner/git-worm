@@ -97,15 +97,42 @@ def _get_ignored_files_in(repo: Path, directory: str) -> list[Path]:
     return paths
 
 
+# Directories where copying is useless because the contents are symlinks
+# or other indirection that won't survive a copy. The toolchain must be
+# re-run in the worktree to regenerate them correctly.
+#
+# Each entry maps a directory name to a list of marker groups.
+# A marker group is a tuple of filenames that must ALL exist for the match.
+# If ANY group matches, the directory should be skipped.
+_UNCOPYABLE_DIRS: dict[str, list[tuple[str, ...]]] = {
+    # JS/TS — pnpm/bun use hardlinks into a global store, Yarn PnP
+    # replaces node_modules entirely, Deno uses URL imports.
+    # Plain npm/yarn classic have real files worth copying.
+    "node_modules": [
+        ("pnpm-lock.yaml",),
+        ("bun.lockb",),
+        ("bun.lock",),
+        ("yarn.lock", ".pnp.cjs"),
+        ("yarn.lock", ".pnp.mjs"),
+        ("deno.lock",),
+    ],
+}
+
+
+def _is_uncopyable(entry_name: str, repo: Path) -> bool:
+    """Check if a directory uses indirection that won't survive copying."""
+    groups = _UNCOPYABLE_DIRS.get(entry_name)
+    if groups is None:
+        return False
+    return any(
+        all((repo / m).exists() for m in group)
+        for group in groups
+    )
+
+
 def should_skip_node_modules(repo: Path) -> bool:
     """Detect if the package manager handles node_modules efficiently."""
-    if (repo / "pnpm-lock.yaml").exists():
-        return True
-    if (repo / "bun.lockb").exists():
-        return True
-    if (repo / "yarn.lock").exists() and (repo / ".pnp.cjs").exists():
-        return True
-    return False
+    return _is_uncopyable("node_modules", repo)
 
 
 def copy_entry(
@@ -168,7 +195,7 @@ def copy_entry(
 
 def _default_strategy(entry: Path, repo: Path) -> str:
     """Determine the default strategy for an ignored entry."""
-    if entry.name == "node_modules" and should_skip_node_modules(repo):
+    if entry.is_dir() and _is_uncopyable(entry.name, repo):
         return "ignore"
     if entry.is_dir():
         return "reflink"
