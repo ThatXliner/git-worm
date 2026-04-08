@@ -47,7 +47,7 @@ def list_worktrees() -> list[dict[str, str]]:
         if line.startswith("worktree "):
             if current:
                 worktrees.append(current)
-            current = {"path": line.removeprefix("worktree ")}
+            current = {"path": str(Path(line.removeprefix("worktree ")))}
         elif line.startswith("HEAD "):
             current["head"] = line.removeprefix("HEAD ")
         elif line.startswith("branch "):
