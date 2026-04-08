@@ -48,6 +48,24 @@ eval "$(git-worm shell-init)"
 # Then: worm switch feat-login  (auto-cds)
 ```
 
+### Shell integration
+
+`git-worm shell-init` outputs a `worm` shell function that wraps `git-worm`. This is needed because `worm switch` needs to `cd` into the worktree directory, which a plain subprocess can't do. All other commands are forwarded to `git-worm` as-is.
+
+Add this to your `.bashrc` or `.zshrc`:
+
+```bash
+eval "$(git-worm shell-init)"
+```
+
+Then use `worm` instead of `git-worm`:
+
+```bash
+worm new feat-login
+worm switch feat-login  # cds into the worktree
+worm list
+```
+
 ## Configuration
 
 Optional `.git-worm.toml` in your repo root:

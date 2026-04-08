@@ -3,7 +3,11 @@ from xclif import command
 
 @command("shell-init")
 def _() -> None:
-    """Output a shell function for cd integration.
+    """Output a `worm` shell function that wraps git-worm with cd integration.
+
+    The `worm switch` command will cd into the worktree directory,
+    which is not possible with a plain subprocess. All other commands
+    are forwarded to git-worm as-is.
 
     Add `eval "$(git-worm shell-init)"` to your shell rc file.
     """
