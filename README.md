@@ -1,5 +1,7 @@
 # git-worm
 
+[![CI](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml)
+
 A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/xclif).
 
 ## Why?
