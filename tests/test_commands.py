@@ -158,3 +158,51 @@ def test_full_workflow(git_repo, capsys):
     # rm
     assert cli.root_command.execute(["rm", "feat-e2e"]) == 0
     assert not (git_repo / ".worktrees" / "feat-e2e").exists()
+
+
+def test_prune_merged_removes_merged_worktrees(git_repo, capsys):
+    """Prune --merged removes worktrees whose branches are merged into main."""
+    cli = _make_cli()
+
+    # Create a worktree, make a commit, then merge it into main
+    cli.root_command.execute(["new", "feat-merged"])
+    wt_path = git_repo / ".worktrees" / "feat-merged"
+    (wt_path / "new_file.txt").write_text("feature work")
+    subprocess.run(["git", "add", "."], cwd=wt_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "feat work"],
+        cwd=wt_path, check=True, capture_output=True,
+    )
+    # Merge feat-merged into main
+    subprocess.run(
+        ["git", "merge", "feat-merged"],
+        cwd=git_repo, check=True, capture_output=True,
+    )
+
+    assert wt_path.exists()
+    result = cli.root_command.execute(["prune", "--merged"])
+    assert result == 0
+    assert not wt_path.exists()
+    out = capsys.readouterr().out
+    assert "feat-merged" in out
+
+
+def test_prune_merged_keeps_unmerged_worktrees(git_repo, capsys):
+    """Prune --merged does not remove worktrees with unmerged commits."""
+    cli = _make_cli()
+
+    cli.root_command.execute(["new", "feat-unmerged"])
+    wt_path = git_repo / ".worktrees" / "feat-unmerged"
+    (wt_path / "new_file.txt").write_text("unmerged work")
+    subprocess.run(["git", "add", "."], cwd=wt_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "unmerged work"],
+        cwd=wt_path, check=True, capture_output=True,
+    )
+
+    assert wt_path.exists()
+    result = cli.root_command.execute(["prune", "--merged"])
+    assert result == 0
+    assert wt_path.exists()
+    out = capsys.readouterr().out
+    assert "No merged worktrees" in out
