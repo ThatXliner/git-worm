@@ -1,10 +1,14 @@
 import subprocess
+from dataclasses import replace
 
 from git_worm import routes
 from xclif import Cli
 
 
 def _make_cli():
+    # Reset shared root command state to avoid cross-test alias collisions
+    routes._.subcommands.clear()
+    routes._.implicit_options.clear()
     return Cli.from_routes(routes)
 
 

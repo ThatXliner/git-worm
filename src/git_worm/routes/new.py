@@ -19,8 +19,6 @@ def _(
     all_branches = (branch, *branches)
     repo = find_repo_root()
     config = load_config(repo / ".git-worm.toml")
-    if config:
-        worktree_dir = config.worktree_dir
 
     failed = False
     for b in all_branches:

@@ -11,7 +11,6 @@ def test_load_config_no_file(tmp_path):
 def test_load_config_basic(tmp_path):
     toml_file = tmp_path / ".git-worm.toml"
     toml_file.write_text("""\
-[settings]
 worktree_dir = "wt"
 
 [[share]]

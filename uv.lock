@@ -238,8 +238,8 @@ wheels = [
 
 [[package]]
 name = "xclif"
-version = "0.2.0"
-source = { git = "https://github.com/ThatXliner/xclif.git#81a87896c3a1c9fa8d01a47e7cc5a4e263a57b49" }
+version = "0.3.0"
+source = { git = "https://github.com/ThatXliner/xclif.git#bbdfc8219b96abb51f627ea6ea8f74185eecb225" }
 dependencies = [
     { name = "platformdirs" },
     { name = "rich" },

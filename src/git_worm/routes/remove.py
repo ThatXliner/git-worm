@@ -2,12 +2,11 @@ from typing import Annotated
 
 import rich
 
-from git_worm.config import load_config
 from git_worm.worktree import find_repo_root, is_dirty, remove_worktree
 from xclif import Arg, Option, WithConfig, command
 
 
-@command()
+@command("remove", "rm")
 def _(
     branch: Annotated[str, Arg(description="Name of the worktree to remove")],
     force: Annotated[bool, Option(description="Remove even if the worktree has uncommitted changes")] = False,
@@ -17,9 +16,6 @@ def _(
     """Remove one or more worktrees."""
     branches = (branch, *branches)
     repo = find_repo_root()
-    config = load_config(repo / ".git-worm.toml")
-    if config:
-        worktree_dir = config.worktree_dir
 
     failed = False
     for b in branches:

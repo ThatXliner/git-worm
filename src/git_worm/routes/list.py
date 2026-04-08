@@ -7,7 +7,7 @@ from xclif import command
 from pathlib import Path
 
 
-@command("list")
+@command("list", "ls")
 def _() -> None:
     """List all worktrees."""
     worktrees = list_worktrees()
