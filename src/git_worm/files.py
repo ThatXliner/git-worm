@@ -12,8 +12,25 @@ from git_worm.config import ShareRule
 EXCLUDED_NAMES = {".git", ".worktrees"}
 
 
+def _has_tracked_files(repo: Path, directory: str) -> bool:
+    """Check if a directory contains any files tracked by git."""
+    result = subprocess.run(
+        ["git", "ls-files", directory],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return bool(result.stdout.strip())
+
+
 def get_ignored_entries(repo: Path) -> list[Path]:
-    """Get top-level gitignored files and directories in the repo."""
+    """Get gitignored files and directories in the repo.
+
+    Returns top-level entries when the entire directory is ignored.
+    For tracked directories that contain ignored files, returns the
+    individual ignored file paths instead.
+    """
     result = subprocess.run(
         ["git", "status", "--ignored", "--porcelain"],
         cwd=repo,
@@ -27,13 +44,44 @@ def get_ignored_entries(repo: Path) -> list[Path]:
         if not line.startswith("!! "):
             continue
         rel = line.removeprefix("!! ").rstrip("/")
-        # Only take top-level entries
         top_level = rel.split("/")[0]
+        if top_level in EXCLUDED_NAMES:
+            continue
         path = repo / top_level
-        if top_level not in EXCLUDED_NAMES and top_level not in seen and path.exists():
+        if not path.exists():
+            continue
+        if top_level in seen:
+            continue
+        # If this is a directory that also has tracked files, we can't
+        # copy the whole thing — get the individual ignored files instead.
+        if path.is_dir() and _has_tracked_files(repo, top_level):
+            seen.add(top_level)
+            nested = _get_ignored_files_in(repo, top_level)
+            entries.extend(nested)
+        else:
             seen.add(top_level)
             entries.append(path)
     return entries
+
+
+def _get_ignored_files_in(repo: Path, directory: str) -> list[Path]:
+    """Get individual ignored file paths within a partially-tracked directory."""
+    result = subprocess.run(
+        ["git", "status", "--ignored", "--porcelain", directory],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    paths = []
+    for line in result.stdout.splitlines():
+        if not line.startswith("!! "):
+            continue
+        rel = line.removeprefix("!! ").rstrip("/")
+        path = repo / rel
+        if path.exists():
+            paths.append(path)
+    return paths
 
 
 def should_skip_node_modules(repo: Path) -> bool:
