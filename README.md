@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml)
 
-https://github.com/user-attachments/assets/eb2c8aa8-288a-4344-9d59-8d53dd6e3833
+https://github.com/user-attachments/assets/391fccaf-6958-45ae-8f9d-ecc038922d7e
+
 
 A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/xclif).
 
@@ -12,7 +13,7 @@ A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/
 
 - **Automatic file management** — gitignored files (`.env`, `.venv`, `node_modules`, etc.) are copied into new worktrees so switching feels like `git switch`
 - **Smart package manager detection** — pnpm/bun/Yarn PnP users don't get unnecessary `node_modules` copies
-- **Nice UI** — Rich-formatted output, tree views, colored status
+- **Nice UI** — Rich-formatted output, tree views, colored status. You can also create multiple worktrees in one command!
 
 ## Install
 
