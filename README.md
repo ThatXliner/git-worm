@@ -21,13 +21,13 @@ A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/
 Requires Python 3.12+
 
 ```bash
-pip install git+https://github.com/ThatXliner/git-worm.git
+pip install git-worm
 ```
 
 Or with [uv](https://github.com/astral-sh/uv):
 
 ```bash
-uv tool install git+https://github.com/ThatXliner/git-worm.git
+uv tool install git-worm
 ```
 
 ## Usage
