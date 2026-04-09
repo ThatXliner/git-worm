@@ -26,8 +26,8 @@ worm() {
     elif [ "$1" = "new" ]; then
         local _worm_out _worm_cd
         _worm_out="$(git-worm "$@")" || { echo "$_worm_out"; return 1; }
-        _worm_cd="$(echo "$_worm_out" | grep '^__worm_cd__:' | cut -d: -f2-)"
-        echo "$_worm_out" | grep -v '^__worm_cd__:'
+        _worm_cd="$(echo "$_worm_out" | grep 'Go to your new worktree with cd ' | cut -d: -f2-)"
+        echo "$_worm_out" | grep -v 'Go to your new worktree with cd '
         if [ -n "$_worm_cd" ] && [ -d "$_worm_cd" ]; then
             cd "$_worm_cd"
         fi

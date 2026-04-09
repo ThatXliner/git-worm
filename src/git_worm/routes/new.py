@@ -67,7 +67,6 @@ def _(
     if len(all_branches) == 1 and not failed:
         wt_path = repo / worktree_dir / all_branches[0]
         rich.print(f"\n[dim]Go to your new worktree with[/dim] [bold]cd {wt_path}[/bold]")
-        print(f"__worm_cd__:{wt_path}")
 
     if failed:
         return 1
