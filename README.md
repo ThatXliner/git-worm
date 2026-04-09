@@ -4,6 +4,8 @@
 
 A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/xclif).
 
+![demo](demo.gif)
+
 ## Why?
 
 `git worktree` is powerful but raw. git-worm adds:
