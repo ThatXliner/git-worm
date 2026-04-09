@@ -2,7 +2,10 @@
 
 > Git WORktree Manager
 
-[![CI](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml)
+[![CI](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/git-worm)](https://pypi.org/project/git-worm)
+[![PyPI](https://img.shields.io/pypi/v/git-worm)](https://pypi.org/project/git-worm)
+[![PyPI - License](https://img.shields.io/pypi/l/git-worm)](#license)
+
 
 https://github.com/user-attachments/assets/916af237-e959-43fc-9046-067929ad874f
 
