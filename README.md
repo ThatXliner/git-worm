@@ -31,6 +31,8 @@ uv tool install git+https://github.com/ThatXliner/git-worm.git
 
 ## Usage
 
+Because of [Xclif](https://github.com/ThatXliner/xclif), git-worm automatically gets a very nice-looking help page
+
 ![Help](./help.png)
 
 ```bash
