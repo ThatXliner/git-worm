@@ -31,6 +31,8 @@ uv tool install git+https://github.com/ThatXliner/git-worm.git
 
 ## Usage
 
+![Help](./help.png)
+
 ```bash
 # Create a new worktree (copies .env, .venv, etc. automatically)
 git worm new feat-login
