@@ -5,7 +5,7 @@ description = "A better git worktree manager"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "xclif @ git+https://github.com/ThatXliner/xclif.git",
+    "xclif",
 ]
 
 [project.scripts]
@@ -14,9 +14,6 @@ git-worm = "git_worm.__main__:cli"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/git_worm"]
