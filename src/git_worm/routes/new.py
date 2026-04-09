@@ -46,9 +46,9 @@ def _(
         # Print summary
         copied = [r for r in results if r["action"] != "ignored"]
         rich.print(f"\n[bold green]Created worktree[/bold green] [bold]{b}[/bold] @ [dim]{wt_path}[/dim]")
-        if copied:
-            rich.print(f"[dim]Copied {len(copied)} ignored file(s)[/dim]")
         if results and get_context().verbosity >= 1:
+            if copied:
+                rich.print(f"[dim]Copied {len(copied)} ignored file(s)[/dim]")
             for r in results:
                 action = r["action"]
                 name = r["name"]
