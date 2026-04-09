@@ -3,10 +3,29 @@ name = "git-worm"
 version = "0.1.0"
 description = "A better git worktree manager"
 readme = "README.md"
+license = "Unlicense"
 requires-python = ">=3.12"
+authors = [
+    { name = "Bryan Hu", email = "thatxliner@gmail.com" },
+]
+keywords = ["git", "worktree", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: The Unlicense (Unlicense)",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Version Control :: Git",
+]
 dependencies = [
     "xclif>=0.4.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/ThatXliner/git-worm"
+Repository = "https://github.com/ThatXliner/git-worm"
+Issues = "https://github.com/ThatXliner/git-worm/issues"
 
 [project.scripts]
 git-worm = "git_worm.__main__:cli"
