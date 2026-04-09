@@ -4,7 +4,7 @@
 
 A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/xclif).
 
-![demo](demo.gif)
+<video src="demo.mp4" autoplay loop muted playsinline></video>
 
 ## Why?
 
