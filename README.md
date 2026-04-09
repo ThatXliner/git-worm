@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml)
 
-A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/xclif).
+https://github.com/user-attachments/assets/68a54842-8a02-49e3-b195-2c05908b1835
 
-<video src="demo.mp4" autoplay loop muted playsinline></video>
+A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/xclif).
 
 ## Why?
 
