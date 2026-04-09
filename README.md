@@ -6,7 +6,6 @@
 
 https://github.com/user-attachments/assets/916af237-e959-43fc-9046-067929ad874f
 
-
 A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/xclif).
 
 ## Why?
@@ -18,6 +17,8 @@ A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/
 - **Nice UI** — Rich-formatted output, tree views, colored status. You can also create multiple worktrees in one command!
 
 ## Install
+
+Requires Python 3.12+
 
 ```bash
 pip install git+https://github.com/ThatXliner/git-worm.git
@@ -111,4 +112,4 @@ When a config file is present, it replaces the default behavior entirely.
 
 ## License
 
-MIT
+Public Domain
