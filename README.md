@@ -1,8 +1,10 @@
 # git-worm
 
+> Git WORktree Manager
+
 [![CI](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml)
 
-https://github.com/user-attachments/assets/f36f37b2-9858-4d61-937e-4ba459e2de4c
+https://github.com/user-attachments/assets/916af237-e959-43fc-9046-067929ad874f
 
 
 A better git worktree manager. Built with [Xclif](https://github.com/ThatXliner/xclif).
