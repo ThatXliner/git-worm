@@ -6,9 +6,10 @@ from git_worm.config import load_config
 from git_worm.files import copy_ignored_files
 from git_worm.worktree import add_worktree, find_repo_root
 from xclif import Arg, Option, WithConfig, command
+from xclif.context import get_context
 
 
-@command()
+@command("new", "add")
 def _(
     branch: Annotated[str, Arg(description="Branch name to check out (or create with --from)")],
     from_ref: Annotated[str, Option(name="from", description="Create branch from this ref")] = "",
@@ -43,9 +44,11 @@ def _(
         results = copy_ignored_files(repo, wt_path, share_rules=share_rules)
 
         # Print summary
+        copied = [r for r in results if r["action"] != "ignored"]
         rich.print(f"\n[bold green]Created worktree[/bold green] [bold]{b}[/bold] @ [dim]{wt_path}[/dim]")
-        if results:
-            rich.print("[dim]Copied ignored files:[/dim]")
+        if copied:
+            rich.print(f"[dim]Copied {len(copied)} ignored file(s)[/dim]")
+        if results and get_context().verbosity >= 1:
             for r in results:
                 action = r["action"]
                 name = r["name"]
