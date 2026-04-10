@@ -97,13 +97,9 @@ def test_is_merged_against_default_branch(tmp_path):
 
 
 def test_is_merged_unmerged_branch(git_repo):
-    default = subprocess.run(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-        cwd=git_repo, check=True, capture_output=True, text=True,
-    ).stdout.strip()
     subprocess.run(["git", "checkout", "-b", "unmerged"], cwd=git_repo, check=True, capture_output=True)
     # Add a commit so this branch diverges from the default branch
     subprocess.run(["git", "commit", "--allow-empty", "-m", "unmerged commit"], cwd=git_repo, check=True, capture_output=True)
-    subprocess.run(["git", "checkout", default], cwd=git_repo, check=True, capture_output=True)
+    subprocess.run(["git", "checkout", "-"], cwd=git_repo, check=True, capture_output=True)
     # Did not merge
     assert not is_merged("unmerged", cwd=git_repo)
