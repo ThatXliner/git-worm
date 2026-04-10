@@ -6,23 +6,40 @@ import subprocess
 from pathlib import Path
 
 
-def add_worktree(path: Path, branch: str, *, from_ref: str | None = None) -> None:
-    """Create a new worktree. Creates a new branch if from_ref is given."""
+def branch_exists(branch: str) -> bool:
+    """Return True if a local branch with this name already exists."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", f"refs/heads/{branch}"],
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
+def add_worktree(path: Path, branch: str, *, from_ref: str | None = None) -> bool:
+    """Create a new worktree.
+
+    If the branch already exists, checks it out directly (caller must validate from_ref is not set).
+    Otherwise creates a new branch from from_ref (or HEAD if not given).
+
+    Returns True if the branch already existed.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    if from_ref is not None:
+    if branch_exists(branch):
         subprocess.run(
-            ["git", "worktree", "add", "-b", branch, str(path), from_ref],
+            ["git", "worktree", "add", str(path), branch],
             check=True,
             capture_output=True,
             text=True,
         )
-    else:
-        subprocess.run(
-            ["git", "worktree", "add", "-b", branch, str(path), "HEAD"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        return True
+    subprocess.run(
+        ["git", "worktree", "add", "-b", branch, str(path), from_ref or "HEAD"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return False
 
 
 def remove_worktree(path: Path, *, force: bool = False) -> None:
