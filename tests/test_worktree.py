@@ -45,8 +45,10 @@ def test_is_dirty_with_changes(git_repo):
 
 
 def test_get_default_branch_no_remote(git_repo):
-    # No remote configured — should fall back to "HEAD"
-    assert get_default_branch(cwd=git_repo) == "HEAD"
+    # No remote configured — should fall back to the primary worktree's branch
+    branch = get_default_branch(cwd=git_repo)
+    assert branch != "HEAD"
+    assert branch  # non-empty branch name
 
 
 def test_get_default_branch_with_remote(tmp_path):

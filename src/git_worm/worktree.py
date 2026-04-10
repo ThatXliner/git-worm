@@ -73,16 +73,24 @@ def find_repo_root() -> Path:
 
 
 def get_default_branch(cwd: Path | None = None) -> str:
-    """Return the default branch name via origin/HEAD, falling back to 'HEAD'."""
+    """Return the default branch name.
+
+    Tries in order:
+    1. refs/remotes/origin/HEAD (remote's default branch)
+    2. Primary worktree's branch (local default when no remote)
+    """
     result = subprocess.run(
         ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
         capture_output=True,
         text=True,
         cwd=cwd,
     )
-    if result.returncode != 0:
-        return "HEAD"
-    return result.stdout.strip().removeprefix("refs/remotes/origin/")
+    if result.returncode == 0:
+        return result.stdout.strip().removeprefix("refs/remotes/origin/")
+    worktrees = list_worktrees()
+    if worktrees and "branch" in worktrees[0]:
+        return worktrees[0]["branch"]
+    return "HEAD"
 
 
 def is_merged(branch: str, cwd: Path | None = None) -> bool:
