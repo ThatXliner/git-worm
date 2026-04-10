@@ -11,29 +11,43 @@ from xclif import Option, command
 @command()
 def _(
     merged: Annotated[bool, Option(description="Also remove worktrees whose branches are fully merged into main")] = False,
+    dry_run: Annotated[bool, Option(description="Show what would be done without making any changes")] = False,
 ) -> None:
     """Remove stale worktree administrative files.
 
     Runs `git worktree prune` to clean up refs for worktrees that have
     been deleted manually without using `git worm rm`.
     """
-    result = subprocess.run(
-        ["git", "worktree", "prune", "--verbose"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    if result.stderr.strip():
-        for line in result.stderr.strip().splitlines():
-            rich.print(f"[dim]pruned:[/dim] {line}")
+    if dry_run:
+        result = subprocess.run(
+            ["git", "worktree", "prune", "--verbose", "--dry-run"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if result.stderr.strip():
+            for line in result.stderr.strip().splitlines():
+                rich.print(f"[bold yellow]dry-run:[/bold yellow] Would prune: {line}")
+        else:
+            rich.print("[dim]Nothing to prune.[/dim]")
     else:
-        rich.print("[dim]Nothing to prune.[/dim]")
+        result = subprocess.run(
+            ["git", "worktree", "prune", "--verbose"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if result.stderr.strip():
+            for line in result.stderr.strip().splitlines():
+                rich.print(f"[dim]pruned:[/dim] {line}")
+        else:
+            rich.print("[dim]Nothing to prune.[/dim]")
 
     if merged:
-        _prune_merged()
+        _prune_merged(dry_run=dry_run)
 
 
-def _prune_merged() -> None:
+def _prune_merged(*, dry_run: bool = False) -> None:
     """Remove worktrees whose branches are fully merged into the main branch."""
     repo = find_repo_root()
     worktrees = list_worktrees()
@@ -64,8 +78,11 @@ def _prune_merged() -> None:
         if not branch or branch not in merged_branches:
             continue
         path = Path(wt["path"])
-        remove_worktree(path)
-        rich.print(f"[bold green]Removed merged worktree[/bold green] [bold]{branch}[/bold]")
+        if dry_run:
+            rich.print(f"[bold yellow]dry-run:[/bold yellow] Would remove merged worktree [bold]{branch}[/bold] @ [dim]{path}[/dim]")
+        else:
+            remove_worktree(path)
+            rich.print(f"[bold green]Removed merged worktree[/bold green] [bold]{branch}[/bold]")
         pruned = True
 
     if not pruned:

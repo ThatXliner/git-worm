@@ -10,6 +10,7 @@ from xclif import Arg, Option, WithConfig, command
 def _(
     branch: Annotated[str, Arg(description="Name of the worktree to remove")],
     force: Annotated[bool, Option(description="Remove even if the worktree has uncommitted changes")] = False,
+    dry_run: Annotated[bool, Option(description="Show what would be done without making any changes")] = False,
     worktree_dir: WithConfig[str] = ".worktrees",
     *branches: str,
 ) -> None:
@@ -32,6 +33,10 @@ def _(
                 f"Use [bold]--force[/bold] to remove anyway."
             )
             failed = True
+            continue
+
+        if dry_run:
+            rich.print(f"[bold yellow]dry-run:[/bold yellow] Would remove worktree [bold]{b}[/bold] @ [dim]{wt_path}[/dim]")
             continue
 
         remove_worktree(wt_path, force=force)

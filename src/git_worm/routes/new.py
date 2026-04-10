@@ -4,7 +4,7 @@ import rich
 from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
 
 from git_worm.config import load_config
-from git_worm.files import copy_ignored_files
+from git_worm.files import _default_strategy, _match_rule, copy_ignored_files, get_ignored_entries
 from git_worm.worktree import add_worktree, find_repo_root
 from xclif import Arg, Option, WithConfig, command
 from xclif.context import get_context
@@ -18,6 +18,7 @@ def _(
     branch: Annotated[str, Arg(description="Branch name to check out (or create with --from)")],
     from_ref: Annotated[str, Option(name="from", description="Create branch from this ref")] = "",
     worktree_dir: WithConfig[str] = ".worktrees",
+    dry_run: Annotated[bool, Option(description="Show what would be done without making any changes")] = False,
     *branches: str,
 ) -> None:
     """Create one or more new worktrees for branches."""
@@ -32,6 +33,23 @@ def _(
         if wt_path.exists():
             rich.print(f"[bold red]Error:[/bold red] Worktree already exists at [bold]{wt_path}[/bold]")
             failed = True
+            continue
+
+        if dry_run:
+            rich.print(f"[bold yellow]dry-run:[/bold yellow] Would create worktree [bold]{b}[/bold] @ [dim]{wt_path}[/dim]")
+            share_rules = config.share_rules if config else None
+            for entry in get_ignored_entries(repo):
+                name = entry.name
+                if share_rules is not None:
+                    rule = _match_rule(name, share_rules)
+                    if rule is None:
+                        continue
+                    strategy = rule.strategy
+                else:
+                    strategy = _default_strategy(entry, repo)
+                action = "COW" if strategy == "reflink" else strategy
+                icon = _ACTION_ICONS.get(action, "+")
+                rich.print(f"  [dim]{icon} {entry.relative_to(repo)} ({strategy})[/dim]")
             continue
 
         # Create the worktree
@@ -78,7 +96,7 @@ def _(
                 else:
                     rich.print(f"  [{color}]{icon}[/{color}] {name} [dim]({action})[/dim]")
 
-    if len(all_branches) == 1 and not failed:
+    if not dry_run and len(all_branches) == 1 and not failed:
         wt_path = repo / worktree_dir / all_branches[0]
         rich.print(f"[dim]Go to your new worktree with[/dim] [bold]cd {wt_path}[/bold]")
 
