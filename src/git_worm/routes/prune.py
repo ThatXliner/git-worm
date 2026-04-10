@@ -12,6 +12,7 @@ from xclif import Option, command
 def _(
     merged: Annotated[bool, Option(description="Also remove worktrees whose branches are fully merged into main")] = False,
     dry_run: Annotated[bool, Option(description="Show what would be done without making any changes")] = False,
+    yes: Annotated[bool, Option(name="yes", short="y", description="Skip confirmation prompt")] = False,
 ) -> None:
     """Remove stale worktree administrative files.
 
@@ -30,43 +31,63 @@ def _(
                 rich.print(f"[bold yellow]dry-run:[/bold yellow] Would prune: {line}")
         else:
             rich.print("[dim]Nothing to prune.[/dim]")
-    else:
-        result = subprocess.run(
-            ["git", "worktree", "prune", "--verbose"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        if result.stderr.strip():
-            for line in result.stderr.strip().splitlines():
-                rich.print(f"[dim]pruned:[/dim] {line}")
-        else:
-            rich.print("[dim]Nothing to prune.[/dim]")
 
-    if merged:
-        _prune_merged(dry_run=dry_run)
-
-
-def _prune_merged(*, dry_run: bool = False) -> None:
-    """Remove worktrees whose branches are fully merged into the default branch."""
-    repo = find_repo_root()
-    worktrees = list_worktrees()
-
-    if not worktrees:
+        if merged:
+            _prune_merged(dry_run=True, yes=True)
         return
 
-    pruned = False
-    for wt in worktrees[1:]:  # skip the primary worktree
-        branch = wt.get("branch")
-        if not branch or not is_merged(branch, cwd=repo):
-            continue
-        path = Path(wt["path"])
-        if dry_run:
-            rich.print(f"[bold yellow]dry-run:[/bold yellow] Would remove merged worktree [bold]{branch}[/bold] @ [dim]{path}[/dim]")
-        else:
-            remove_worktree(path)
-            rich.print(f"[bold green]Removed merged worktree[/bold green] [bold]{branch}[/bold]")
-        pruned = True
+    # Collect what would be pruned
+    stale_result = subprocess.run(
+        ["git", "worktree", "prune", "--verbose", "--dry-run"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    stale_lines = stale_result.stderr.strip().splitlines() if stale_result.stderr.strip() else []
 
-    if not pruned:
-        rich.print("[dim]No merged worktrees to remove.[/dim]")
+    merged_worktrees: list[dict] = []
+    if merged:
+        repo = find_repo_root()
+        worktrees = list_worktrees()
+        for wt in worktrees[1:]:
+            branch = wt.get("branch")
+            if branch and is_merged(branch, cwd=repo):
+                merged_worktrees.append(wt)
+
+    if not stale_lines and not merged_worktrees:
+        if not merged and any(
+            is_merged(wt["branch"], cwd=find_repo_root())
+            for wt in list_worktrees()[1:]
+            if wt.get("branch")
+        ):
+            rich.print("[dim]Nothing to prune. You have merged worktrees — run with [bold]--merged[/bold] to remove them.[/dim]")
+        else:
+            rich.print("[dim]Nothing to prune.[/dim]")
+        return
+
+    # Show what will be removed
+    if stale_lines:
+        rich.print("[bold]Stale worktree refs:[/bold]")
+        for line in stale_lines:
+            rich.print(f"  [dim]{line}[/dim]")
+    if merged_worktrees:
+        rich.print("[bold]Merged worktrees:[/bold]")
+        for wt in merged_worktrees:
+            rich.print(f"  [bold]{wt['branch']}[/bold] [dim]{wt['path']}[/dim]")
+
+    if not yes:
+        rich.print()
+        confirm = input("Prune the above? [y/N] ").strip().lower()
+        if confirm != "y":
+            rich.print("[dim]Aborted.[/dim]")
+            return
+
+    if stale_lines:
+        subprocess.run(["git", "worktree", "prune", "--verbose"], check=True, capture_output=True, text=True)
+        for line in stale_lines:
+            rich.print(f"[dim]pruned:[/dim] {line}")
+
+    for wt in merged_worktrees:
+        path = Path(wt["path"])
+        remove_worktree(path)
+        rich.print(f"[bold green]Removed merged worktree[/bold green] [bold]{wt['branch']}[/bold]")
