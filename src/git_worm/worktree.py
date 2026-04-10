@@ -98,7 +98,7 @@ def is_merged(branch: str, cwd: Path | None = None) -> bool:
     # Exclude the current branch (prefixed with '*') — it's not "merged", it IS the default
     # Strip '+ ' prefix from branches checked out in other worktrees
     merged = {
-        line.strip().lstrip("+ ")
+        line.strip().removeprefix("+ ")
         for line in result.stdout.splitlines()
         if not line.startswith("*")
     }
