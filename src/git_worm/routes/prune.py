@@ -4,7 +4,7 @@ from typing import Annotated
 
 import rich
 
-from git_worm.worktree import find_repo_root, list_worktrees, remove_worktree
+from git_worm.worktree import find_repo_root, is_merged, list_worktrees, remove_worktree
 from xclif import Option, command
 
 
@@ -48,34 +48,17 @@ def _(
 
 
 def _prune_merged(*, dry_run: bool = False) -> None:
-    """Remove worktrees whose branches are fully merged into the main branch."""
+    """Remove worktrees whose branches are fully merged into the default branch."""
     repo = find_repo_root()
     worktrees = list_worktrees()
 
-    # Find the main branch name (first worktree is the primary one)
     if not worktrees:
         return
-    main_branch = worktrees[0].get("branch")
-    if not main_branch:
-        return
-
-    # Get branches merged into the main branch
-    result = subprocess.run(
-        ["git", "branch", "--merged", main_branch],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    merged_branches = {
-        line.strip().lstrip("*+ ")
-        for line in result.stdout.splitlines()
-        if not line.startswith("*")
-    }
 
     pruned = False
     for wt in worktrees[1:]:  # skip the primary worktree
         branch = wt.get("branch")
-        if not branch or branch not in merged_branches:
+        if not branch or not is_merged(branch, cwd=repo):
             continue
         path = Path(wt["path"])
         if dry_run:
