@@ -5,6 +5,7 @@ from __future__ import annotations
 import platform
 import shutil
 import subprocess
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from fnmatch import fnmatch
 from pathlib import Path
@@ -216,10 +217,12 @@ def copy_ignored_files(
     dst: Path,
     *,
     share_rules: list[ShareRule] | None = None,
+    on_progress: "Callable[[int, int, str, str], None] | None" = None,
 ) -> list[dict[str, str]]:
     """Copy all gitignored files from src to dst.
 
     If share_rules is provided, it replaces default behavior entirely.
+    on_progress(completed, total, name, action) is called after each entry.
     """
     entries = get_ignored_entries(src)
 
@@ -236,11 +239,30 @@ def copy_ignored_files(
             strategy = _default_strategy(entry, src)
         work.append((entry, strategy))
 
-    if len(work) <= 3:
-        return [copy_entry(e, src, dst, strategy=s) for e, s in work]
+    results: list[dict[str, str]] = []
+    total = len(work)
+
+    if total <= 3:
+        for i, (e, s) in enumerate(work):
+            r = copy_entry(e, src, dst, strategy=s)
+            results.append(r)
+            if on_progress:
+                on_progress(i + 1, total, r["name"], r["action"])
+        return results
+
+    import threading
+    lock = threading.Lock()
+    completed = 0
+
+    def _copy_and_notify(e: Path, s: str) -> dict[str, str]:
+        nonlocal completed
+        r = copy_entry(e, src, dst, strategy=s)
+        with lock:
+            completed += 1
+            if on_progress:
+                on_progress(completed, total, r["name"], r["action"])
+        return r
 
     with ThreadPoolExecutor() as pool:
-        futures = [
-            pool.submit(copy_entry, e, src, dst, strategy=s) for e, s in work
-        ]
+        futures = [pool.submit(_copy_and_notify, e, s) for e, s in work]
         return [f.result() for f in futures]
