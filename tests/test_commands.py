@@ -184,7 +184,7 @@ def test_prune_merged_removes_merged_worktrees(git_repo, capsys):
     )
 
     assert wt_path.exists()
-    result = cli.root_command.execute(["prune", "--merged"])
+    result = cli.root_command.execute(["prune", "--merged", "--yes"])
     assert result == 0
     assert not wt_path.exists()
     out = capsys.readouterr().out
@@ -209,4 +209,4 @@ def test_prune_merged_keeps_unmerged_worktrees(git_repo, capsys):
     assert result == 0
     assert wt_path.exists()
     out = capsys.readouterr().out
-    assert "No merged worktrees" in out
+    assert "Nothing to prune." in out
