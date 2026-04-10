@@ -72,30 +72,32 @@ def find_repo_root() -> Path:
     return Path(result.stdout.strip())
 
 
-def get_default_branch() -> str:
+def get_default_branch(cwd: Path | None = None) -> str:
     """Return the default branch name via origin/HEAD, falling back to 'HEAD'."""
     result = subprocess.run(
         ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
         capture_output=True,
         text=True,
+        cwd=cwd,
     )
     if result.returncode != 0:
         return "HEAD"
     return result.stdout.strip().removeprefix("refs/remotes/origin/")
 
 
-def is_merged(branch: str) -> bool:
+def is_merged(branch: str, cwd: Path | None = None) -> bool:
     """Check if a branch has been merged into the default branch."""
-    default = get_default_branch()
+    default = get_default_branch(cwd=cwd)
     result = subprocess.run(
         ["git", "branch", "--merged", default],
         check=True,
         capture_output=True,
         text=True,
+        cwd=cwd,
     )
     # Exclude the current branch (prefixed with '*') — it's not "merged", it IS the default
     merged = {
-        line.strip().lstrip("* ")
+        line.strip()
         for line in result.stdout.splitlines()
         if not line.startswith("*")
     }
