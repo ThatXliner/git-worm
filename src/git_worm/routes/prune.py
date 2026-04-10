@@ -12,7 +12,7 @@ from xclif import Option, command
 def _(
     merged: Annotated[bool, Option(description="Also remove worktrees whose branches are fully merged into main")] = False,
     dry_run: Annotated[bool, Option(description="Show what would be done without making any changes")] = False,
-    yes: Annotated[bool, Option(name="yes", short="y", description="Skip confirmation prompt")] = False,
+    yes: Annotated[bool, Option(name="yes", description="Skip confirmation prompt")] = False,
 ) -> None:
     """Remove stale worktree administrative files.
 
