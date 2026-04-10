@@ -110,7 +110,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "xclif", specifier = ">=0.4.0" }]
+requires-dist = [{ name = "xclif", specifier = ">=0.4.3" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -238,14 +238,14 @@ wheels = [
 
 [[package]]
 name = "xclif"
-version = "0.4.0"
+version = "0.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "platformdirs" },
     { name = "rich" },
     { name = "tomlkit" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ad/68/98546f3fe5642d195ad075ee1fe2fc79861c137cf1921fa40c3586c31cb9/xclif-0.4.0.tar.gz", hash = "sha256:243d66dd6c786d168c323b3a8f688aff31d65d9551cbd3a95b4d54a00060f0ad", size = 126281, upload-time = "2026-04-09T02:36:03.179Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/2d/392ba11bdbfd57e5dc9fd4d4661630c45f529d51a4870761be203c3d2ea0/xclif-0.4.3.tar.gz", hash = "sha256:417630d58d07b6dd6b1b923c408428c646acc3c4a2e8d10ff6c88b6f4f63f442", size = 127806, upload-time = "2026-04-10T18:21:10.257Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/ff/8dc10d9851cc4343589e4c084a11676f6ab959082e05269aff7f6864ad3f/xclif-0.4.0-py3-none-any.whl", hash = "sha256:996ee3527e4827d56e20bb26afd81551a2e051836fa108bbb07c0a6e16143a3b", size = 32430, upload-time = "2026-04-09T02:36:01.929Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/e5/7058693232da1dc8c5a7a6d0bc91eafaaf57e224e75043062a01eed1ff3d/xclif-0.4.3-py3-none-any.whl", hash = "sha256:b77bc93de57e136e5f8e12ff0d55158b23746cc06f9470d0401b1c25ce12a40a", size = 33250, upload-time = "2026-04-10T18:21:09.049Z" },
 ]
