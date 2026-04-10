@@ -27,3 +27,8 @@ clean:
 # Install all dependency groups
 install:
     uv sync --all-groups
+
+# Bump version: just bump 0.3.0 "Feature Title"
+bump version:
+    sed -i '' 's/^version = ".*"/version = "{{ version }}"/' pyproject.toml
+    sed -i '' 's/^__version__ = ".*"/__version__ = "{{ version }}"/' src/git_worm/__init__.py
