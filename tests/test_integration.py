@@ -111,7 +111,7 @@ class TestRm:
         _run(["new", "feat-rm"], repo)
         assert (repo / ".worktrees" / "feat-rm").exists()
 
-        result = _run(["rm", "feat-rm"], repo)
+        result = _run(["rm", "feat-rm", "--yes"], repo)
         assert result.returncode == 0
         assert not (repo / ".worktrees" / "feat-rm").exists()
 
@@ -126,7 +126,7 @@ class TestRm:
         _run(["new", "feat-force"], repo)
         (repo / ".worktrees" / "feat-force" / "untracked.txt").write_text("dirty")
 
-        result = _run(["rm", "feat-force", "--force"], repo)
+        result = _run(["rm", "feat-force", "--force", "--yes"], repo)
         assert result.returncode == 0
 
     def test_nonexistent(self, repo):
@@ -185,5 +185,5 @@ class TestEndToEnd:
         r = _run(["switch", "feat-e2e"], repo)
         assert str(repo / ".worktrees" / "feat-e2e") in r.stdout.replace("\n", "")
 
-        assert _run(["rm", "feat-e2e"], repo).returncode == 0
+        assert _run(["rm", "feat-e2e", "--yes"], repo).returncode == 0
         assert not (repo / ".worktrees" / "feat-e2e").exists()

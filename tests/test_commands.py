@@ -62,7 +62,7 @@ def test_rm_removes_worktree(git_repo, capsys):
     cli.root_command.execute(["new", "feat-rm"])
     assert (git_repo / ".worktrees" / "feat-rm").exists()
 
-    result = cli.root_command.execute(["rm", "feat-rm"])
+    result = cli.root_command.execute(["rm", "feat-rm", "--yes"])
     assert result == 0
     assert not (git_repo / ".worktrees" / "feat-rm").exists()
 
@@ -81,8 +81,44 @@ def test_rm_dirty_worktree_with_force(git_repo, capsys):
     cli.root_command.execute(["new", "feat-force"])
     (git_repo / ".worktrees" / "feat-force" / "untracked.txt").write_text("dirty")
 
-    result = cli.root_command.execute(["rm", "feat-force", "--force"])
+    result = cli.root_command.execute(["rm", "feat-force", "--force", "--yes"])
     assert result == 0
+
+
+def test_rm_confirmation_aborts(git_repo, capsys, monkeypatch):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-confirm"])
+    assert (git_repo / ".worktrees" / "feat-confirm").exists()
+
+    monkeypatch.setattr("builtins.input", lambda _: "n")
+    result = cli.root_command.execute(["rm", "feat-confirm"])
+    assert (git_repo / ".worktrees" / "feat-confirm").exists()
+    out = capsys.readouterr().out
+    assert "Aborted" in out
+
+
+def test_rm_confirmation_accepts(git_repo, capsys, monkeypatch):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-confirm-yes"])
+    assert (git_repo / ".worktrees" / "feat-confirm-yes").exists()
+
+    monkeypatch.setattr("builtins.input", lambda _: "y")
+    result = cli.root_command.execute(["rm", "feat-confirm-yes"])
+    assert result == 0
+    assert not (git_repo / ".worktrees" / "feat-confirm-yes").exists()
+
+
+def test_rm_dry_run(git_repo, capsys):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-dry"])
+    assert (git_repo / ".worktrees" / "feat-dry").exists()
+
+    result = cli.root_command.execute(["rm", "feat-dry", "--dry-run"])
+    assert result == 0
+    assert (git_repo / ".worktrees" / "feat-dry").exists()
+    out = capsys.readouterr().out
+    assert "dry-run" in out
+    assert "feat-dry" in out
 
 
 def test_rm_nonexistent_worktree(git_repo, capsys):
@@ -160,7 +196,7 @@ def test_full_workflow(git_repo, capsys):
     assert str(git_repo / ".worktrees" / "feat-e2e") in out
 
     # rm
-    assert cli.root_command.execute(["rm", "feat-e2e"]) == 0
+    assert cli.root_command.execute(["rm", "feat-e2e", "--yes"]) == 0
     assert not (git_repo / ".worktrees" / "feat-e2e").exists()
 
 
