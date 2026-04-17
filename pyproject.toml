@@ -1,6 +1,6 @@
 [project]
 name = "git-worm"
-version = "0.2.0"
+version = "0.3.0"
 description = "A better git worktree manager"
 readme = "README.md"
 license = "Unlicense"
