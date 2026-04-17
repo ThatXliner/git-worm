@@ -1,3 +1,4 @@
+import subprocess
 from typing import Annotated
 
 import rich
@@ -16,7 +17,9 @@ from git_worm.files import (
     _default_strategy,
     _match_rule,
     copy_ignored_files,
+    detect_package_manager,
     get_ignored_entries,
+    should_skip_node_modules,
 )
 from git_worm.worktree import add_worktree, branch_exists, find_repo_root
 
@@ -121,6 +124,16 @@ def _(
                 repo, wt_path, share_rules=share_rules, on_progress=on_progress
             )
 
+        # Run post_create hooks
+        if config and config.post_create:
+            for cmd in config.post_create:
+                rich.print(f"[dim]Running:[/dim] {cmd}")
+                result = subprocess.run(cmd, shell=True, cwd=wt_path)
+                if result.returncode != 0:
+                    rich.print(
+                        f"[bold yellow]Warning:[/bold yellow] Command exited with code {result.returncode}"
+                    )
+
         # Print summary
         copied = [r for r in results if r["action"] != "ignored"]
         rich.print(
@@ -139,6 +152,18 @@ def _(
                 else:
                     rich.print(
                         f"  [{color}]{icon}[/{color}] {name} [dim]({action})[/dim]"
+                    )
+
+        # Print hint if node_modules was skipped and no post_create hook ran install
+        if should_skip_node_modules(repo):
+            has_install_hook = config and any(
+                "install" in cmd for cmd in config.post_create
+            )
+            if not has_install_hook:
+                install_cmd = detect_package_manager(repo)
+                if install_cmd:
+                    rich.print(
+                        f"[dim]Run[/dim] [bold]{install_cmd}[/bold] [dim]in the worktree to set up dependencies[/dim]"
                     )
 
     if not dry_run and len(all_branches) == 1 and not failed:

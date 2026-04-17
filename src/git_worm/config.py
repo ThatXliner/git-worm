@@ -17,6 +17,7 @@ class ShareRule:
 class Config:
     worktree_dir: str = ".worktrees"
     share_rules: list[ShareRule] = field(default_factory=list)
+    post_create: list[str] = field(default_factory=list)
 
 
 def load_config(path: Path) -> Config | None:
@@ -32,4 +33,5 @@ def load_config(path: Path) -> Config | None:
     return Config(
         worktree_dir=data.get("worktree_dir", ".worktrees"),
         share_rules=share_rules,
+        post_create=data.get("post_create", []),
     )

@@ -137,6 +137,23 @@ def should_skip_node_modules(repo: Path) -> bool:
     return _is_uncopyable("node_modules", repo)
 
 
+def detect_package_manager(repo: Path) -> str | None:
+    """Detect the package manager based on lockfiles. Returns install command or None."""
+    if (repo / "pnpm-lock.yaml").exists():
+        return "pnpm install"
+    if (repo / "bun.lockb").exists() or (repo / "bun.lock").exists():
+        return "bun install"
+    if (repo / "yarn.lock").exists():
+        if (repo / ".pnp.cjs").exists() or (repo / ".pnp.mjs").exists():
+            return "yarn install"
+        return None  # yarn classic copies fine
+    if (repo / "deno.lock").exists():
+        return "deno install"
+    if (repo / "package-lock.json").exists():
+        return None  # npm copies fine
+    return None
+
+
 def copy_entry(
     entry: Path,
     src_root: Path,

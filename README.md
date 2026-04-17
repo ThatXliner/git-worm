@@ -100,11 +100,24 @@ strategy = "ignore"
 [[share]]
 path = "target"
 strategy = "symlink"
+
+# Commands to run in the new worktree after creation
+post_create = ["bun install"]
 ```
 
 Strategies: `copy`, `reflink` (COW, falls back to copy), `symlink`, `ignore`.
 
-When a config file is present, it replaces the default behavior entirely.
+When a config file is present, share rules replace the default behavior entirely.
+
+### Post-create hooks
+
+The `post_create` array runs shell commands in the new worktree after it's created. This is useful for setting up dependencies when `node_modules` is skipped:
+
+```toml
+post_create = ["pnpm install", "cargo fetch"]
+```
+
+If no `post_create` hook is configured and `node_modules` was skipped, git-worm prints a hint with the detected install command.
 
 ## Default Behavior (no config)
 
