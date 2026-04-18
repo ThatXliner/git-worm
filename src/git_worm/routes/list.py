@@ -28,6 +28,8 @@ def _() -> None:
             label = f"[dim]{path}[/dim] [italic](bare)[/italic]"
         elif is_detached:
             label = f"[bold]{branch}[/bold] [dim]{path}[/dim] [yellow](detached)[/yellow]"
+        elif not Path(path).exists():
+            label = f"[bold]{branch}[/bold] [dim]{path}[/dim] [red](missing — run `git worktree prune`)[/red]"
         else:
             dirty = is_dirty(Path(path))
             merged = is_merged(branch)
