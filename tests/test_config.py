@@ -51,3 +51,29 @@ def test_load_config_empty_settings(tmp_path):
     assert config is not None
     assert config.worktree_dir == ".worktrees"
     assert config.share_rules == []
+
+
+def test_load_config_settings_table(tmp_path):
+    toml_file = tmp_path / ".git-worm.toml"
+    toml_file.write_text("""\
+[settings]
+worktree_dir = "wt"
+post_create = ["bun install"]
+""")
+    config = load_config(toml_file)
+    assert config is not None
+    assert config.worktree_dir == "wt"
+    assert config.post_create == ["bun install"]
+
+
+def test_load_config_post_create_misplaced_after_share(tmp_path):
+    toml_file = tmp_path / ".git-worm.toml"
+    toml_file.write_text("""\
+[[share]]
+path = "target"
+strategy = "ignore"
+post_create = ["cargo fetch"]
+""")
+    config = load_config(toml_file)
+    assert config is not None
+    assert config.post_create == ["cargo fetch"]

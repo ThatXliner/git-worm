@@ -147,3 +147,26 @@ def test_copy_ignored_files_with_config(git_repo):
     assert not (dst / "build").exists()
     assert any(r["action"] == "copied" for r in results)
     assert any(r["action"] == "ignored" for r in results)
+
+
+def test_copy_ignored_files_matches_relative_paths(git_repo):
+    (git_repo / "src").mkdir()
+    (git_repo / "src" / "main.py").write_text("print('hi')")
+    (git_repo / ".gitignore").write_text("*.pyc\n")
+    subprocess.run(["git", "add", "."], cwd=git_repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "add gitignore"],
+        cwd=git_repo, check=True, capture_output=True,
+    )
+    (git_repo / "src" / "cache.pyc").write_text("cache")
+
+    dst = git_repo / ".worktrees" / "test-branch"
+    dst.mkdir(parents=True)
+
+    results = copy_ignored_files(
+        git_repo,
+        dst,
+        share_rules=[ShareRule(path="src/*.pyc", strategy="copy")],
+    )
+    assert (dst / "src" / "cache.pyc").read_text() == "cache"
+    assert results == [{"name": "src/cache.pyc", "action": "copied"}]

@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import sys
 import textwrap
 
 import pytest
@@ -10,7 +11,7 @@ import pytest
 def _run(args: list[str], cwd, *, check=True):
     """Run git-worm as a subprocess."""
     return subprocess.run(
-        ["git-worm", *args],
+        [sys.executable, "-m", "git_worm", *args],
         cwd=cwd,
         check=check,
         capture_output=True,
@@ -96,7 +97,7 @@ class TestNew:
 
     def test_from_ref(self, repo):
         _git(["commit", "--allow-empty", "-m", "second"], repo)
-        result = _run(["new", "feat-from", "--from", "HEAD~1"], repo)
+        result = _run(["new", "feat-from", "--from-ref", "HEAD~1"], repo)
         assert result.returncode == 0
         assert (repo / ".worktrees" / "feat-from").exists()
 
@@ -104,6 +105,18 @@ class TestNew:
         _run(["new", "feat-dup"], repo)
         result = _run(["new", "feat-dup"], repo, check=False)
         assert "Error" in result.stdout or result.returncode != 0
+
+    def test_uses_settings_worktree_dir(self, repo):
+        (repo / ".git-worm.toml").write_text("""\
+[settings]
+worktree_dir = "wt"
+""")
+
+        result = _run(["new", "feat-config-dir"], repo)
+
+        assert result.returncode == 0
+        assert (repo / "wt" / "feat-config-dir").exists()
+        assert not (repo / ".worktrees" / "feat-config-dir").exists()
 
 
 class TestRm:
@@ -154,6 +167,12 @@ class TestSwitch:
         # Rich may wrap long paths with newlines; collapse them
         stdout = result.stdout.replace("\n", "")
         assert str(repo / ".worktrees" / "feat-sw") in stdout
+
+    def test_print_path_only(self, repo):
+        _run(["new", "feat-sw-path"], repo)
+        result = _run(["switch", "feat-sw-path", "--path"], repo)
+        assert result.returncode == 0
+        assert result.stdout.strip() == str(repo / ".worktrees" / "feat-sw-path")
 
     def test_nonexistent(self, repo):
         result = _run(["switch", "nonexistent"], repo, check=False)

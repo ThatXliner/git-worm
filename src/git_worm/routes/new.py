@@ -30,10 +30,10 @@ _ACTION_COLORS = {"symlinked": "cyan", "COW": "magenta", "ignored": "dim"}
 @command("new", "add")
 def _(
     branch: Annotated[
-        str, Arg(description="Branch name to check out (or create with --from)")
+        str, Arg(description="Branch name to check out (or create with --from-ref)")
     ],
     from_ref: Annotated[
-        str, Option(name="from", description="Create branch from this ref")
+        str, Option(name="from-ref", description="Create branch from this ref")
     ] = "",
     worktree_dir: WithConfig[str] = ".worktrees",
     dry_run: Annotated[
@@ -45,6 +45,8 @@ def _(
     all_branches = (branch, *branches)
     repo = find_repo_root()
     config = load_config(repo / ".git-worm.toml")
+    if config and worktree_dir == ".worktrees":
+        worktree_dir = config.worktree_dir
 
     failed = False
     for b in all_branches:
@@ -60,7 +62,7 @@ def _(
         if branch_exists(b):
             if from_ref:
                 rich.print(
-                    f"[bold red]Error:[/bold red] Branch [bold]{b}[/bold] already exists, cannot create from [bold]{from_ref}[/bold]. Remove --from or delete the branch first."
+                    f"[bold red]Error:[/bold red] Branch [bold]{b}[/bold] already exists, cannot create from [bold]{from_ref}[/bold]. Remove --from-ref or delete the branch first."
                 )
                 failed = True
                 continue
@@ -74,9 +76,9 @@ def _(
             )
             share_rules = config.share_rules if config else None
             for entry in get_ignored_entries(repo):
-                name = entry.name
+                rel_path = str(entry.relative_to(repo))
                 if share_rules is not None:
-                    rule = _match_rule(name, share_rules)
+                    rule = _match_rule(rel_path, share_rules)
                     if rule is None:
                         continue
                     strategy = rule.strategy

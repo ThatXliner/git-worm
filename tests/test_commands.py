@@ -1,4 +1,5 @@
 import subprocess
+import shutil
 from dataclasses import replace
 
 from git_worm import routes
@@ -52,7 +53,7 @@ def test_new_with_from_ref(git_repo, capsys):
         cwd=git_repo, check=True, capture_output=True,
     )
     cli = _make_cli()
-    result = cli.root_command.execute(["new", "feat-from", "--from", "HEAD~1"])
+    result = cli.root_command.execute(["new", "feat-from", "--from-ref", "HEAD~1"])
     assert result == 0
     assert (git_repo / ".worktrees" / "feat-from").exists()
 
@@ -153,6 +154,49 @@ def test_switch_prints_path(git_repo, capsys):
     assert str(git_repo / ".worktrees" / "feat-switch") in out.replace("\n", "")
 
 
+def test_switch_print_path_only(git_repo, capsys):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-switch-path"])
+    capsys.readouterr()
+
+    result = cli.root_command.execute(["switch", "feat-switch-path", "--path"])
+    assert result == 0
+    out = capsys.readouterr().out.strip()
+    assert out == str(git_repo / ".worktrees" / "feat-switch-path")
+
+
+def test_switch_finds_worktree_outside_managed_dir(git_repo, tmp_path, capsys):
+    external = tmp_path / "external-worktree"
+    subprocess.run(
+        ["git", "worktree", "add", "-b", "external-branch", str(external), "HEAD"],
+        cwd=git_repo,
+        check=True,
+        capture_output=True,
+    )
+    cli = _make_cli()
+
+    result = cli.root_command.execute(["switch", "external-branch", "--path"])
+
+    assert result == 0
+    assert capsys.readouterr().out.strip() == str(external)
+
+
+def test_rm_removes_worktree_outside_managed_dir(git_repo, tmp_path, capsys):
+    external = tmp_path / "external-remove"
+    subprocess.run(
+        ["git", "worktree", "add", "-b", "external-remove", str(external), "HEAD"],
+        cwd=git_repo,
+        check=True,
+        capture_output=True,
+    )
+    cli = _make_cli()
+
+    result = cli.root_command.execute(["rm", "external-remove", "--yes"])
+
+    assert result == 0
+    assert not external.exists()
+
+
 def test_switch_nonexistent(git_repo, capsys):
     cli = _make_cli()
     result = cli.root_command.execute(["switch", "nonexistent"])
@@ -225,6 +269,25 @@ def test_prune_merged_removes_merged_worktrees(git_repo, capsys):
     assert not wt_path.exists()
     out = capsys.readouterr().out
     assert "feat-merged" in out
+
+
+def test_prune_removes_recent_missing_worktree(git_repo, capsys):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-missing"])
+    wt_path = git_repo / ".worktrees" / "feat-missing"
+    shutil.rmtree(wt_path)
+
+    result = cli.root_command.execute(["prune", "--yes"])
+
+    assert result == 0
+    worktrees = subprocess.run(
+        ["git", "worktree", "list", "--porcelain"],
+        cwd=git_repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout
+    assert "feat-missing" not in worktrees
 
 
 def test_prune_merged_keeps_unmerged_worktrees(git_repo, capsys):

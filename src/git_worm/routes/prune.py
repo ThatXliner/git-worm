@@ -21,7 +21,7 @@ def _(
     """
     if dry_run:
         result = subprocess.run(
-            ["git", "worktree", "prune", "--verbose", "--dry-run"],
+            ["git", "worktree", "prune", "--verbose", "--dry-run", "--expire=now"],
             check=True,
             capture_output=True,
             text=True,
@@ -38,7 +38,7 @@ def _(
 
     # Collect what would be pruned
     stale_result = subprocess.run(
-        ["git", "worktree", "prune", "--verbose", "--dry-run"],
+        ["git", "worktree", "prune", "--verbose", "--dry-run", "--expire=now"],
         check=True,
         capture_output=True,
         text=True,
@@ -83,7 +83,7 @@ def _(
             return
 
     if stale_lines:
-        subprocess.run(["git", "worktree", "prune", "--verbose"], check=True, capture_output=True, text=True)
+        subprocess.run(["git", "worktree", "prune", "--verbose", "--expire=now"], check=True, capture_output=True, text=True)
         for line in stale_lines:
             rich.print(f"[dim]pruned:[/dim] {line}")
 

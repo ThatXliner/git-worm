@@ -44,11 +44,32 @@ def test_is_dirty_with_changes(git_repo):
     assert is_dirty(git_repo)
 
 
+def test_is_dirty_with_tracked_changes(git_repo):
+    (git_repo / "README.md").write_text("dirty")
+    assert is_dirty(git_repo)
+
+
 def test_get_default_branch_no_remote(git_repo):
     # No remote configured — should fall back to the primary worktree's branch
     branch = get_default_branch(cwd=git_repo)
     assert branch != "HEAD"
     assert branch  # non-empty branch name
+
+
+def test_get_default_branch_no_remote_uses_cwd(git_repo, tmp_path, monkeypatch):
+    """Fallback worktree lookup should use the requested repo, not process cwd."""
+    other = tmp_path / "other"
+    other.mkdir()
+    subprocess.run(["git", "init", "--initial-branch=other-main"], cwd=other, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=other, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "T"], cwd=other, check=True, capture_output=True)
+    (other / "f.txt").write_text("x")
+    subprocess.run(["git", "add", "."], cwd=other, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-m", "init"], cwd=other, check=True, capture_output=True)
+
+    monkeypatch.chdir(other)
+
+    assert get_default_branch(cwd=git_repo) != "other-main"
 
 
 def test_get_default_branch_with_remote(tmp_path):
@@ -105,3 +126,23 @@ def test_is_merged_unmerged_branch(git_repo):
     subprocess.run(["git", "checkout", "-"], cwd=git_repo, check=True, capture_output=True)
     # Did not merge
     assert not is_merged("unmerged", cwd=git_repo)
+
+
+def test_is_merged_uses_cwd_for_default_branch(git_repo, tmp_path, monkeypatch):
+    """is_merged should compare against the target repo's default branch."""
+    subprocess.run(["git", "checkout", "-b", "merged"], cwd=git_repo, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "--allow-empty", "-m", "merged commit"], cwd=git_repo, check=True, capture_output=True)
+    subprocess.run(["git", "checkout", "-"], cwd=git_repo, check=True, capture_output=True)
+    subprocess.run(["git", "merge", "merged"], cwd=git_repo, check=True, capture_output=True)
+
+    other = tmp_path / "other"
+    other.mkdir()
+    subprocess.run(["git", "init", "--initial-branch=other-main"], cwd=other, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "t@t.com"], cwd=other, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "T"], cwd=other, check=True, capture_output=True)
+    (other / "f.txt").write_text("x")
+    subprocess.run(["git", "add", "."], cwd=other, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-m", "init"], cwd=other, check=True, capture_output=True)
+    monkeypatch.chdir(other)
+
+    assert is_merged("merged", cwd=git_repo)

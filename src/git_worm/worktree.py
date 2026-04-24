@@ -50,13 +50,22 @@ def remove_worktree(path: Path, *, force: bool = False) -> None:
     subprocess.run(cmd, check=True, capture_output=True, text=True)
 
 
-def list_worktrees() -> list[dict[str, str]]:
+def find_worktree(branch: str, *, cwd: Path | None = None) -> dict[str, str] | None:
+    """Find a worktree by branch name."""
+    for wt in list_worktrees(cwd=cwd):
+        if wt.get("branch") == branch:
+            return wt
+    return None
+
+
+def list_worktrees(cwd: Path | None = None) -> list[dict[str, str]]:
     """List all worktrees. Returns list of dicts with 'path', 'head', 'branch' keys."""
     result = subprocess.run(
         ["git", "worktree", "list", "--porcelain"],
         check=True,
         capture_output=True,
         text=True,
+        cwd=cwd,
     )
     worktrees = []
     current: dict[str, str] = {}
@@ -104,7 +113,7 @@ def get_default_branch(cwd: Path | None = None) -> str:
     )
     if result.returncode == 0:
         return result.stdout.strip().removeprefix("refs/remotes/origin/")
-    worktrees = list_worktrees()
+    worktrees = list_worktrees(cwd=cwd)
     if worktrees and "branch" in worktrees[0]:
         return worktrees[0]["branch"]
     return "HEAD"

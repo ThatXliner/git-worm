@@ -88,6 +88,7 @@ Optional `.git-worm.toml` in your repo root:
 ```toml
 [settings]
 worktree_dir = ".worktrees"  # default
+post_create = ["bun install"]
 
 [[share]]
 path = ".env*"
@@ -100,9 +101,6 @@ strategy = "ignore"
 [[share]]
 path = "target"
 strategy = "symlink"
-
-# Commands to run in the new worktree after creation
-post_create = ["bun install"]
 ```
 
 Strategies: `copy`, `reflink` (COW, falls back to copy), `symlink`, `ignore`.
@@ -114,6 +112,7 @@ When a config file is present, share rules replace the default behavior entirely
 The `post_create` array runs shell commands in the new worktree after it's created. This is useful for setting up dependencies when `node_modules` is skipped:
 
 ```toml
+[settings]
 post_create = ["pnpm install", "cargo fetch"]
 ```
 

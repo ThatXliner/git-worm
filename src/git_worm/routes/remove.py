@@ -1,8 +1,10 @@
+from pathlib import Path
 from typing import Annotated
 
 import rich
 
-from git_worm.worktree import find_repo_root, is_dirty, remove_worktree
+from git_worm.config import load_config
+from git_worm.worktree import find_repo_root, find_worktree, is_dirty, remove_worktree
 from xclif import Arg, Option, WithConfig, command
 
 
@@ -18,12 +20,16 @@ def _(
     """Remove one or more worktrees."""
     branches = (branch, *branches)
     repo = find_repo_root()
+    config = load_config(repo / ".git-worm.toml")
+    if config and worktree_dir == ".worktrees":
+        worktree_dir = config.worktree_dir
 
     # First pass: validate and collect removable worktrees
     to_remove: list[tuple[str, "Path"]] = []
     failed = False
     for b in branches:
-        wt_path = repo / worktree_dir / b
+        wt = find_worktree(b, cwd=repo)
+        wt_path = Path(wt["path"]) if wt else repo / worktree_dir / b
 
         if not wt_path.exists():
             rich.print(f"[bold red]Error:[/bold red] No worktree found at [bold]{wt_path}[/bold]")

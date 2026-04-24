@@ -221,10 +221,11 @@ def _default_strategy(entry: Path, repo: Path) -> str:
     return "copy"
 
 
-def _match_rule(entry_name: str, rules: list[ShareRule]) -> ShareRule | None:
+def _match_rule(entry_path: str, rules: list[ShareRule]) -> ShareRule | None:
     """Find the first matching share rule for an entry name."""
+    entry_name = Path(entry_path).name
     for rule in rules:
-        if fnmatch(entry_name, rule.path):
+        if fnmatch(entry_path, rule.path) or fnmatch(entry_name, rule.path):
             return rule
     return None
 
@@ -246,7 +247,7 @@ def copy_ignored_files(
     # Resolve strategies and filter entries
     work: list[tuple[Path, str]] = []
     for entry in entries:
-        name = entry.name
+        name = str(entry.relative_to(src))
         if share_rules is not None:
             rule = _match_rule(name, share_rules)
             if rule is None:

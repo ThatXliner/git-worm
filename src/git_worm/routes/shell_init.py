@@ -15,7 +15,7 @@ def _() -> None:
 worm() {
     if [ "$1" = "switch" ] && [ -n "$2" ]; then
         local wt_dir
-        wt_dir="$(git rev-parse --show-toplevel)/.worktrees/$2"
+        wt_dir="$(git-worm switch "$2" --path)"
         if [ -d "$wt_dir" ]; then
             cd "$wt_dir"
             echo "Switched to worktree '$2' @ $wt_dir"
@@ -26,8 +26,12 @@ worm() {
     elif [ "$1" = "new" ]; then
         local _worm_out _worm_cd
         _worm_out="$(git-worm "$@")" || { echo "$_worm_out"; return 1; }
-        _worm_cd="$(echo "$_worm_out" | grep 'Go to your new worktree with cd ' | cut -d: -f2-)"
-        echo "$_worm_out" | grep -v 'Go to your new worktree with cd '
+        echo "$_worm_out" | grep -v 'Go to your new worktree with'
+        if [ "$#" -eq 2 ]; then
+            _worm_cd="$(git-worm switch "$2" --path)"
+        else
+            _worm_cd=""
+        fi
         if [ -n "$_worm_cd" ] && [ -d "$_worm_cd" ]; then
             cd "$_worm_cd"
         fi

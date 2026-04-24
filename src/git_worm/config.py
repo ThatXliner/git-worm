@@ -26,12 +26,20 @@ def load_config(path: Path) -> Config | None:
         return None
     with open(path, "rb") as f:
         data = tomllib.load(f)
+    settings = data.get("settings", {})
+    raw_share_rules = data.get("share", [])
     share_rules = [
         ShareRule(path=rule["path"], strategy=rule["strategy"])
-        for rule in data.get("share", [])
+        for rule in raw_share_rules
     ]
+    post_create = data.get("post_create", settings.get("post_create", []))
+    if not post_create:
+        for rule in raw_share_rules:
+            if "post_create" in rule:
+                post_create = rule["post_create"]
+                break
     return Config(
-        worktree_dir=data.get("worktree_dir", ".worktrees"),
+        worktree_dir=data.get("worktree_dir", settings.get("worktree_dir", ".worktrees")),
         share_rules=share_rules,
-        post_create=data.get("post_create", []),
+        post_create=post_create,
     )
