@@ -64,9 +64,15 @@ def _(
             rich.print("[dim]Aborted.[/dim]")
             return
 
+    removed = []
     for b, wt_path in to_remove:
         remove_worktree(wt_path, force=force)
-        rich.print(f"[bold green]Removed worktree[/bold green] [bold]{b}[/bold]")
+        removed.append(b)
+
+    if removed:
+        rich.print(f"[bold green]Removed ({len(removed)})[/bold green]")
+        for name in removed:
+            rich.print(f"  [red]-[/red] [bold]{name}[/bold]")
 
     if failed:
         return 1

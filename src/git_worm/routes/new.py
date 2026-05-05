@@ -9,8 +9,9 @@ from rich.progress import (
     TaskProgressColumn,
     TextColumn,
 )
+from collections import defaultdict
+
 from xclif import Arg, Option, WithConfig, command
-from xclif.context import get_context
 
 from git_worm.config import load_config
 from git_worm.files import (
@@ -137,24 +138,21 @@ def _(
                     )
 
         # Print summary
-        copied = [r for r in results if r["action"] != "ignored"]
         rich.print(
             f"[bold green]Created worktree[/bold green] [bold]{b}[/bold] @ [dim]{wt_path}[/dim]"
         )
-        if results and get_context().verbosity >= 1:
-            if copied:
-                rich.print(f"[dim]Copied {len(copied)} ignored file(s)[/dim]")
+        if results:
+            groups: dict[str, list[str]] = defaultdict(list)
             for r in results:
-                action = r["action"]
-                name = r["name"]
+                groups[r["action"]].append(r["name"])
+            for action in sorted(groups.keys()):
+                items = sorted(groups[action])
                 icon = _ACTION_ICONS.get(action, "+")
                 color = _ACTION_COLORS.get(action, "green")
-                if action == "ignored":
-                    rich.print(f"  [dim]{icon} {name} ({action})[/dim]")
-                else:
-                    rich.print(
-                        f"  [{color}]{icon}[/{color}] {name} [dim]({action})[/dim]"
-                    )
+                label = action.title() if action != "COW" else action
+                rich.print(f"  [{color}]{label} ({len(items)})[/{color}]")
+                for name in items:
+                    rich.print(f"    [{color}]{icon}[/{color}] {name}")
 
         # Print hint if node_modules was skipped and no post_create hook ran install
         if should_skip_node_modules(repo):
