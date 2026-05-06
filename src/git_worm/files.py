@@ -167,7 +167,7 @@ def copy_entry(
     """
     rel = entry.relative_to(src_root)
     dst = dst_root / rel
-    name = str(rel)
+    name = rel.as_posix()
 
     if strategy == "ignore":
         return {"name": name, "action": "ignored"}
