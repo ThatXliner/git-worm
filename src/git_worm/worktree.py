@@ -122,21 +122,14 @@ def get_default_branch(cwd: Path | None = None) -> str:
 def is_merged(branch: str, cwd: Path | None = None) -> bool:
     """Check if a branch has been merged into the default branch."""
     default = get_default_branch(cwd=cwd)
+    if branch == default:
+        return False
     result = subprocess.run(
-        ["git", "branch", "--merged", default],
-        check=True,
+        ["git", "merge-base", "--is-ancestor", branch, default],
         capture_output=True,
-        text=True,
         cwd=cwd,
     )
-    # Exclude the current branch (prefixed with '*') — it's not "merged", it IS the default
-    # Strip '+ ' prefix from branches checked out in other worktrees
-    merged = {
-        line.strip().removeprefix("+ ")
-        for line in result.stdout.splitlines()
-        if not line.startswith("*")
-    }
-    return branch in merged
+    return result.returncode == 0
 
 
 def is_dirty(path: Path) -> bool:
