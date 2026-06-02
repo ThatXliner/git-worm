@@ -167,7 +167,7 @@ def copy_entry(
     """
     rel = entry.relative_to(src_root)
     dst = dst_root / rel
-    name = str(rel)
+    name = rel.as_posix()
 
     if strategy == "ignore":
         return {"name": name, "action": "ignored"}
@@ -247,7 +247,7 @@ def copy_ignored_files(
     # Resolve strategies and filter entries
     work: list[tuple[Path, str]] = []
     for entry in entries:
-        name = str(entry.relative_to(src))
+        name = entry.relative_to(src).as_posix()
         if share_rules is not None:
             rule = _match_rule(name, share_rules)
             if rule is None:
