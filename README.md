@@ -1,5 +1,7 @@
 # git-worm
 
+<img src="https://raw.githubusercontent.com/ThatXliner/git-worm/main/assets/logo.svg" alt="git-worm logo" width="120" align="right">
+
 > Git WORktree Manager
 
 [![CI](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml/badge.svg)](https://github.com/ThatXliner/git-worm/actions/workflows/ci.yml) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/git-worm)](https://pypi.org/project/git-worm)

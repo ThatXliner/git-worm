@@ -1,0 +1,40 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="git-worm logo">
+  <title>git-worm</title>
+  <defs>
+    <linearGradient id="gw-bg" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#34D399"/>
+      <stop offset="1" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="44" fill="#064E3B"/>
+  <!-- git branch line the worm crawls along -->
+  <g stroke="#A7F3D0" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.8">
+    <path d="M40 150 H160"/>
+    <path d="M100 150 V108 H150"/>
+  </g>
+  <g fill="#A7F3D0">
+    <circle cx="40" cy="150" r="9"/>
+    <circle cx="160" cy="150" r="9"/>
+    <circle cx="150" cy="108" r="9"/>
+  </g>
+  <!-- the worm: segmented body crawling over the branch -->
+  <g>
+    <circle cx="60" cy="92" r="16" fill="url(#gw-bg)"/>
+    <circle cx="88" cy="80" r="17" fill="url(#gw-bg)"/>
+    <circle cx="116" cy="80" r="18" fill="url(#gw-bg)"/>
+    <!-- head -->
+    <circle cx="146" cy="74" r="22" fill="url(#gw-bg)"/>
+    <!-- eyes -->
+    <circle cx="150" cy="68" r="6" fill="#ffffff"/>
+    <circle cx="152" cy="68" r="3" fill="#064E3B"/>
+    <circle cx="138" cy="70" r="5" fill="#ffffff"/>
+    <circle cx="140" cy="70" r="2.5" fill="#064E3B"/>
+    <!-- antennae -->
+    <g stroke="#A7F3D0" stroke-width="3" stroke-linecap="round">
+      <path d="M150 54 L156 42"/>
+      <path d="M140 56 L134 44"/>
+    </g>
+    <circle cx="157" cy="40" r="3.5" fill="#A7F3D0"/>
+    <circle cx="133" cy="42" r="3.5" fill="#A7F3D0"/>
+  </g>
+</svg>
