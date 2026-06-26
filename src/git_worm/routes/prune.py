@@ -2,10 +2,8 @@ import subprocess
 from pathlib import Path
 from typing import Annotated
 
-import rich
-
 from git_worm.worktree import find_repo_root, is_merged, list_worktrees, remove_worktree
-from xclif import Option, command
+from xclif import Option, command, console
 
 
 @command()
@@ -28,9 +26,9 @@ def _(
         )
         if result.stderr.strip():
             for line in result.stderr.strip().splitlines():
-                rich.print(f"[bold yellow]dry-run:[/bold yellow] Would prune: {line}")
+                console.print(f"[bold yellow]dry-run:[/bold yellow] Would prune: {line}")
         else:
-            rich.print("[dim]Nothing to prune.[/dim]")
+            console.print("[dim]Nothing to prune.[/dim]")
 
         if merged:
             _prune_merged(dry_run=True, yes=True)
@@ -60,34 +58,34 @@ def _(
             for wt in list_worktrees()[1:]
             if wt.get("branch")
         ):
-            rich.print("[dim]Nothing to prune. You have merged worktrees — run with [bold]--merged[/bold] to remove them.[/dim]")
+            console.print("[dim]Nothing to prune. You have merged worktrees — run with [bold]--merged[/bold] to remove them.[/dim]")
         else:
-            rich.print("[dim]Nothing to prune.[/dim]")
+            console.print("[dim]Nothing to prune.[/dim]")
         return
 
     # Show what will be removed
     if stale_lines:
-        rich.print("[bold]Stale worktree refs:[/bold]")
+        console.print("[bold]Stale worktree refs:[/bold]")
         for line in stale_lines:
-            rich.print(f"  [dim]{line}[/dim]")
+            console.print(f"  [dim]{line}[/dim]")
     if merged_worktrees:
-        rich.print("[bold]Merged worktrees:[/bold]")
+        console.print("[bold]Merged worktrees:[/bold]")
         for wt in merged_worktrees:
-            rich.print(f"  [bold]{wt['branch']}[/bold] [dim]{wt['path']}[/dim]")
+            console.print(f"  [bold]{wt['branch']}[/bold] [dim]{wt['path']}[/dim]")
 
     if not yes:
-        rich.print()
+        console.print()
         confirm = input("Prune the above? [y/N] ").strip().lower()
         if confirm != "y":
-            rich.print("[dim]Aborted.[/dim]")
+            console.print("[dim]Aborted.[/dim]")
             return
 
     if stale_lines:
         subprocess.run(["git", "worktree", "prune", "--verbose", "--expire=now"], check=True, capture_output=True, text=True)
         for line in stale_lines:
-            rich.print(f"[dim]pruned:[/dim] {line}")
+            console.print(f"[dim]pruned:[/dim] {line}")
 
     for wt in merged_worktrees:
         path = Path(wt["path"])
         remove_worktree(path)
-        rich.print(f"[bold green]Removed merged worktree[/bold green] [bold]{wt['branch']}[/bold]")
+        console.print(f"[bold green]Removed merged worktree[/bold green] [bold]{wt['branch']}[/bold]")

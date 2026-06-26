@@ -1,11 +1,9 @@
 from pathlib import Path
 from typing import Annotated
 
-import rich
-
 from git_worm.config import load_config
 from git_worm.worktree import find_repo_root, find_worktree
-from xclif import Arg, Option, WithConfig, command
+from xclif import Arg, Option, WithConfig, command, console
 
 
 @command()
@@ -23,11 +21,11 @@ def _(
     wt_path = Path(wt["path"]) if wt else repo / worktree_dir / branch
 
     if not wt_path.exists():
-        rich.print(f"[bold red]Error:[/bold red] No worktree found for [bold]{branch}[/bold]")
+        console.print(f"[bold red]Error:[/bold red] No worktree found for [bold]{branch}[/bold]")
         return 1
 
     if path:
         print(wt_path)
         return
 
-    rich.print(f"Worktree for [bold]{branch}[/bold] @ [bold]{wt_path}[/bold]")
+    console.print(f"Worktree for [bold]{branch}[/bold] @ [bold]{wt_path}[/bold]")

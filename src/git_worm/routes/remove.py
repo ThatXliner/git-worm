@@ -1,11 +1,9 @@
 from pathlib import Path
 from typing import Annotated
 
-import rich
-
 from git_worm.config import load_config
 from git_worm.worktree import find_repo_root, find_worktree, is_dirty, remove_worktree
-from xclif import Arg, Option, WithConfig, command
+from xclif import Arg, Option, WithConfig, command, console
 
 
 @command("remove", "rm")
@@ -32,12 +30,12 @@ def _(
         wt_path = Path(wt["path"]) if wt else repo / worktree_dir / b
 
         if not wt_path.exists():
-            rich.print(f"[bold red]Error:[/bold red] No worktree found at [bold]{wt_path}[/bold]")
+            console.print(f"[bold red]Error:[/bold red] No worktree found at [bold]{wt_path}[/bold]")
             failed = True
             continue
 
         if not force and is_dirty(wt_path):
-            rich.print(
+            console.print(
                 f"[bold yellow]Warning:[/bold yellow] Worktree [bold]{b}[/bold] has uncommitted changes.\n"
                 f"Use [bold]--force[/bold] to remove anyway."
             )
@@ -51,22 +49,22 @@ def _(
 
     if dry_run:
         for b, wt_path in to_remove:
-            rich.print(f"[bold yellow]dry-run:[/bold yellow] Would remove worktree [bold]{b}[/bold] @ [dim]{wt_path}[/dim]")
+            console.print(f"[bold yellow]dry-run:[/bold yellow] Would remove worktree [bold]{b}[/bold] @ [dim]{wt_path}[/dim]")
         return 1 if failed else 0
 
     if not yes:
-        rich.print("[bold]Will remove:[/bold]")
+        console.print("[bold]Will remove:[/bold]")
         for b, wt_path in to_remove:
-            rich.print(f"  [bold]{b}[/bold] [dim]{wt_path}[/dim]")
-        rich.print()
+            console.print(f"  [bold]{b}[/bold] [dim]{wt_path}[/dim]")
+        console.print()
         confirm = input("Remove the above? [y/N] ").strip().lower()
         if confirm != "y":
-            rich.print("[dim]Aborted.[/dim]")
+            console.print("[dim]Aborted.[/dim]")
             return
 
     for b, wt_path in to_remove:
         remove_worktree(wt_path, force=force)
-        rich.print(f"[bold green]Removed worktree[/bold green] [bold]{b}[/bold]")
+        console.print(f"[bold green]Removed worktree[/bold green] [bold]{b}[/bold]")
 
     if failed:
         return 1

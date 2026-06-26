@@ -1,7 +1,6 @@
 import subprocess
 from typing import Annotated
 
-import rich
 from rich.progress import (
     BarColumn,
     Progress,
@@ -9,7 +8,7 @@ from rich.progress import (
     TaskProgressColumn,
     TextColumn,
 )
-from xclif import Arg, Option, WithConfig, command
+from xclif import Arg, Option, WithConfig, command, console
 from xclif.context import get_context
 
 from git_worm.config import load_config
@@ -53,7 +52,7 @@ def _(
         wt_path = repo / worktree_dir / b
 
         if wt_path.exists():
-            rich.print(
+            console.print(
                 f"[bold red]Error:[/bold red] Worktree already exists at [bold]{wt_path}[/bold]"
             )
             failed = True
@@ -61,17 +60,17 @@ def _(
 
         if branch_exists(b):
             if from_ref:
-                rich.print(
+                console.print(
                     f"[bold red]Error:[/bold red] Branch [bold]{b}[/bold] already exists, cannot create from [bold]{from_ref}[/bold]. Remove --from-ref or delete the branch first."
                 )
                 failed = True
                 continue
-            rich.print(
+            console.print(
                 f"[bold yellow]Warning:[/bold yellow] Branch [bold]{b}[/bold] already exists, checking it out as a worktree"
             )
 
         if dry_run:
-            rich.print(
+            console.print(
                 f"[bold yellow]dry-run:[/bold yellow] Would create worktree [bold]{b}[/bold] @ [dim]{wt_path}[/dim]"
             )
             share_rules = config.share_rules if config else None
@@ -86,7 +85,7 @@ def _(
                     strategy = _default_strategy(entry, repo)
                 action = "COW" if strategy == "reflink" else strategy
                 icon = _ACTION_ICONS.get(action, "+")
-                rich.print(
+                console.print(
                     f"  [dim]{icon} {entry.relative_to(repo)} ({strategy})[/dim]"
                 )
             continue
@@ -129,30 +128,30 @@ def _(
         # Run post_create hooks
         if config and config.post_create:
             for cmd in config.post_create:
-                rich.print(f"[dim]Running:[/dim] {cmd}")
+                console.print(f"[dim]Running:[/dim] {cmd}")
                 result = subprocess.run(cmd, shell=True, cwd=wt_path)
                 if result.returncode != 0:
-                    rich.print(
+                    console.print(
                         f"[bold yellow]Warning:[/bold yellow] Command exited with code {result.returncode}"
                     )
 
         # Print summary
         copied = [r for r in results if r["action"] != "ignored"]
-        rich.print(
+        console.print(
             f"[bold green]Created worktree[/bold green] [bold]{b}[/bold] @ [dim]{wt_path}[/dim]"
         )
         if results and get_context().verbosity >= 1:
             if copied:
-                rich.print(f"[dim]Copied {len(copied)} ignored file(s)[/dim]")
+                console.print(f"[dim]Copied {len(copied)} ignored file(s)[/dim]")
             for r in results:
                 action = r["action"]
                 name = r["name"]
                 icon = _ACTION_ICONS.get(action, "+")
                 color = _ACTION_COLORS.get(action, "green")
                 if action == "ignored":
-                    rich.print(f"  [dim]{icon} {name} ({action})[/dim]")
+                    console.print(f"  [dim]{icon} {name} ({action})[/dim]")
                 else:
-                    rich.print(
+                    console.print(
                         f"  [{color}]{icon}[/{color}] {name} [dim]({action})[/dim]"
                     )
 
@@ -164,13 +163,13 @@ def _(
             if not has_install_hook:
                 install_cmd = detect_package_manager(repo)
                 if install_cmd:
-                    rich.print(
+                    console.print(
                         f"[dim]Run[/dim] [bold]{install_cmd}[/bold] [dim]in the worktree to set up dependencies[/dim]"
                     )
 
     if not dry_run and len(all_branches) == 1 and not failed:
         wt_path = repo / worktree_dir / all_branches[0]
-        rich.print(f"[dim]Go to your new worktree with[/dim] [bold]cd {wt_path}[/bold]")
+        console.print(f"[dim]Go to your new worktree with[/dim] [bold]cd {wt_path}[/bold]")
 
     if failed:
         return 1

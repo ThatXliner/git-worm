@@ -1,6 +1,6 @@
 [project]
 name = "git-worm"
-version = "0.5.0"
+version = "0.5.1"
 description = "A better git worktree manager"
 readme = "README.md"
 license = "Unlicense"
@@ -19,7 +19,7 @@ classifiers = [
     "Topic :: Software Development :: Version Control :: Git",
 ]
 dependencies = [
-    "xclif>=0.4.3",
+    "xclif>=0.6.1",
 ]
 
 [project.urls]

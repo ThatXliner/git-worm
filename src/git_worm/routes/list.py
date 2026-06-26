@@ -1,9 +1,7 @@
-import rich
-from rich.console import Console
 from rich.tree import Tree
 
 from git_worm.worktree import list_worktrees, is_dirty, is_merged
-from xclif import command
+from xclif import command, console
 
 from pathlib import Path
 
@@ -14,7 +12,7 @@ def _() -> None:
     worktrees = list_worktrees()
 
     if not worktrees:
-        rich.print("[dim]No worktrees found.[/dim]")
+        console.print("[dim]No worktrees found.[/dim]")
         return
 
     repo_root = Path(worktrees[0]["path"])
@@ -52,5 +50,4 @@ def _() -> None:
 
         tree.add(label)
 
-    console = Console(soft_wrap=False)
     console.print(tree)
