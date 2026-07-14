@@ -17,6 +17,7 @@ def _() -> None:
 
     repo_root = Path(worktrees[0]["path"])
 
+    merged_count = 0
     tree = Tree("[bold]Worktrees[/bold]")
     for i, wt in enumerate(worktrees):
         path = wt["path"]
@@ -44,6 +45,7 @@ def _() -> None:
             if dirty:
                 status += " [red][italic]dirty[/italic][/red]"
             if merged:
+                merged_count += 1
                 status += " [green](merged)[/green]"
             branch_fmt = f"[bold blue]{branch}[/bold blue]" if is_primary else f"[bold]{branch}[/bold]"
             label = f"{branch_fmt} [dim]{path_display}[/dim]{status}"
@@ -51,3 +53,7 @@ def _() -> None:
         tree.add(label)
 
     console.print(tree)
+
+    if merged_count:
+        plural = "s" if merged_count > 1 else ""
+        console.print(f"[dim]{merged_count} merged worktree{plural} — run [bold]git worm prune[/bold] to remove.[/dim]")

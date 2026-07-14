@@ -138,6 +138,30 @@ def test_list_shows_worktrees(git_repo, capsys):
     assert "feat-list" in out
 
 
+def test_list_suggests_prune_for_merged(git_repo, capsys):
+    """List shows a prune suggestion when merged worktrees exist."""
+    cli = _make_cli()
+
+    cli.root_command.execute(["new", "feat-done"])
+    wt_path = git_repo / ".worktrees" / "feat-done"
+    (wt_path / "new_file.txt").write_text("feature work")
+    subprocess.run(["git", "add", "."], cwd=wt_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "feat work"],
+        cwd=wt_path, check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "merge", "feat-done"],
+        cwd=git_repo, check=True, capture_output=True,
+    )
+
+    result = cli.root_command.execute(["list"])
+    assert result == 0
+    out = capsys.readouterr().out
+    assert "(merged)" in out
+    assert "git worm prune" in out
+
+
 def test_list_empty(git_repo, capsys):
     cli = _make_cli()
     result = cli.root_command.execute(["list"])
