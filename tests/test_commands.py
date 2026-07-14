@@ -245,7 +245,7 @@ def test_full_workflow(git_repo, capsys):
 
 
 def test_prune_merged_removes_merged_worktrees(git_repo, capsys):
-    """Prune --merged removes worktrees whose branches are merged into main."""
+    """Prune removes worktrees whose branches are merged into main by default."""
     cli = _make_cli()
 
     # Create a worktree, make a commit, then merge it into main
@@ -264,7 +264,7 @@ def test_prune_merged_removes_merged_worktrees(git_repo, capsys):
     )
 
     assert wt_path.exists()
-    result = cli.root_command.execute(["prune", "--merged", "--yes"])
+    result = cli.root_command.execute(["prune", "--yes"])
     assert result == 0
     assert not wt_path.exists()
     out = capsys.readouterr().out
@@ -291,7 +291,7 @@ def test_prune_removes_recent_missing_worktree(git_repo, capsys):
 
 
 def test_prune_merged_keeps_unmerged_worktrees(git_repo, capsys):
-    """Prune --merged does not remove worktrees with unmerged commits."""
+    """Prune does not remove worktrees with unmerged commits."""
     cli = _make_cli()
 
     cli.root_command.execute(["new", "feat-unmerged"])
@@ -304,8 +304,83 @@ def test_prune_merged_keeps_unmerged_worktrees(git_repo, capsys):
     )
 
     assert wt_path.exists()
-    result = cli.root_command.execute(["prune", "--merged"])
+    result = cli.root_command.execute(["prune"])
     assert result == 0
     assert wt_path.exists()
     out = capsys.readouterr().out
     assert "Nothing to prune." in out
+
+
+def test_prune_no_merged_keeps_merged_worktrees(git_repo, capsys):
+    """Prune --no-merged only prunes stale refs, keeping merged worktrees."""
+    cli = _make_cli()
+
+    cli.root_command.execute(["new", "feat-kept"])
+    wt_path = git_repo / ".worktrees" / "feat-kept"
+    (wt_path / "new_file.txt").write_text("feature work")
+    subprocess.run(["git", "add", "."], cwd=wt_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "feat work"],
+        cwd=wt_path, check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "merge", "feat-kept"],
+        cwd=git_repo, check=True, capture_output=True,
+    )
+
+    result = cli.root_command.execute(["prune", "--no-merged", "--yes"])
+    assert result == 0
+    assert wt_path.exists()
+    out = capsys.readouterr().out
+    assert "Nothing to prune." in out
+    assert "--no-merged" in out
+
+
+def test_prune_skips_dirty_merged_worktrees(git_repo, capsys):
+    """Prune does not remove merged worktrees with uncommitted changes."""
+    cli = _make_cli()
+
+    cli.root_command.execute(["new", "feat-dirty"])
+    wt_path = git_repo / ".worktrees" / "feat-dirty"
+    (wt_path / "new_file.txt").write_text("feature work")
+    subprocess.run(["git", "add", "."], cwd=wt_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "feat work"],
+        cwd=wt_path, check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "merge", "feat-dirty"],
+        cwd=git_repo, check=True, capture_output=True,
+    )
+    (wt_path / "uncommitted.txt").write_text("work in progress")
+
+    result = cli.root_command.execute(["prune", "--yes"])
+    assert result == 0
+    assert wt_path.exists()
+    out = capsys.readouterr().out
+    assert "uncommitted changes" in out
+
+
+def test_prune_dry_run_makes_no_changes(git_repo, capsys):
+    """Prune --dry-run reports merged worktrees but removes nothing."""
+    cli = _make_cli()
+
+    cli.root_command.execute(["new", "feat-dry"])
+    wt_path = git_repo / ".worktrees" / "feat-dry"
+    (wt_path / "new_file.txt").write_text("feature work")
+    subprocess.run(["git", "add", "."], cwd=wt_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "feat work"],
+        cwd=wt_path, check=True, capture_output=True,
+    )
+    subprocess.run(
+        ["git", "merge", "feat-dry"],
+        cwd=git_repo, check=True, capture_output=True,
+    )
+
+    result = cli.root_command.execute(["prune", "--dry-run"])
+    assert result == 0
+    assert wt_path.exists()
+    out = capsys.readouterr().out
+    assert "feat-dry" in out
+    assert "dry-run" in out
