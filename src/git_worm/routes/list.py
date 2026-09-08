@@ -1,8 +1,7 @@
-import rich
 from rich.tree import Tree
 
 from git_worm.worktree import list_worktrees, is_dirty, is_merged
-from xclif import command
+from xclif import command, console
 
 from pathlib import Path
 
@@ -13,23 +12,32 @@ def _() -> None:
     worktrees = list_worktrees()
 
     if not worktrees:
-        rich.print("[dim]No worktrees found.[/dim]")
+        console.print("[dim]No worktrees found.[/dim]")
         return
 
+    repo_root = Path(worktrees[0]["path"])
+
+    merged_count = 0
     tree = Tree("[bold]Worktrees[/bold]")
     for i, wt in enumerate(worktrees):
         path = wt["path"]
+        try:
+            rel_path = Path(path).relative_to(repo_root)
+            path_display = f"./{rel_path}"
+        except ValueError:
+            path_display = path
+
         branch = wt.get("branch", wt.get("head", "???")[:8])
         is_bare = wt.get("bare") == "true"
         is_detached = wt.get("detached") == "true"
         is_primary = i == 0
 
         if is_bare:
-            label = f"[dim]{path}[/dim] [italic](bare)[/italic]"
+            label = f"[dim]{path_display}[/dim] [italic](bare)[/italic]"
         elif is_detached:
-            label = f"[bold]{branch}[/bold] [dim]{path}[/dim] [yellow](detached)[/yellow]"
+            label = f"[bold]{branch}[/bold] [dim]{path_display}[/dim] [yellow](detached)[/yellow]"
         elif not Path(path).exists():
-            label = f"[bold]{branch}[/bold] [dim]{path}[/dim] [red](missing — run `git worm prune`)[/red]"
+            label = f"[bold]{branch}[/bold] [dim]{path_display}[/dim] [red](missing — run `git worm prune`)[/red]"
         else:
             dirty = is_dirty(Path(path))
             merged = is_merged(branch)
@@ -37,10 +45,15 @@ def _() -> None:
             if dirty:
                 status += " [red][italic]dirty[/italic][/red]"
             if merged:
+                merged_count += 1
                 status += " [green](merged)[/green]"
             branch_fmt = f"[bold blue]{branch}[/bold blue]" if is_primary else f"[bold]{branch}[/bold]"
-            label = f"{branch_fmt} [dim]{path}[/dim]{status}"
+            label = f"{branch_fmt} [dim]{path_display}[/dim]{status}"
 
         tree.add(label)
 
-    rich.print(tree)
+    console.print(tree)
+
+    if merged_count:
+        plural = "s" if merged_count > 1 else ""
+        console.print(f"[dim]{merged_count} merged worktree{plural} — run [bold]git worm clean --yes[/bold] to remove.[/dim]")

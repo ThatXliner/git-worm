@@ -1,6 +1,6 @@
 [project]
 name = "git-worm"
-version = "0.4.0"
+version = "0.6.0"
 description = "A better git worktree manager"
 readme = "README.md"
 license = "Unlicense"
@@ -19,7 +19,7 @@ classifiers = [
     "Topic :: Software Development :: Version Control :: Git",
 ]
 dependencies = [
-    "xclif>=0.4.3",
+    "xclif>=0.6.1",
 ]
 
 [project.urls]
@@ -42,6 +42,6 @@ testpaths = ["tests"]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.0",
+    "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
 ]

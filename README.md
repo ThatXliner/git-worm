@@ -1,3 +1,11 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/Dark-Banner.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/Light-Banner.svg">
+    <img src="https://raw.githubusercontent.com/ThatXliner/git-worm/main/assets/Light-Banner.svg" alt="git-worm — a better git worktree manager" width="640">
+  </picture>
+</p>
+
 # git-worm
 
 > Git WORktree Manager
