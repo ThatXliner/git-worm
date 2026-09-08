@@ -56,4 +56,4 @@ def _() -> None:
 
     if merged_count:
         plural = "s" if merged_count > 1 else ""
-        console.print(f"[dim]{merged_count} merged worktree{plural} — run [bold]git worm prune[/bold] to remove.[/dim]")
+        console.print(f"[dim]{merged_count} merged worktree{plural} — run [bold]git worm clean --yes[/bold] to remove.[/dim]")

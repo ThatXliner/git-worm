@@ -138,8 +138,8 @@ def test_list_shows_worktrees(git_repo, capsys):
     assert "feat-list" in out
 
 
-def test_list_suggests_prune_for_merged(git_repo, capsys):
-    """List shows a prune suggestion when merged worktrees exist."""
+def test_list_suggests_clean_for_merged(git_repo, capsys):
+    """List shows how to remove merged worktrees."""
     cli = _make_cli()
 
     cli.root_command.execute(["new", "feat-done"])
@@ -159,7 +159,7 @@ def test_list_suggests_prune_for_merged(git_repo, capsys):
     assert result == 0
     out = capsys.readouterr().out
     assert "(merged)" in out
-    assert "git worm prune" in out
+    assert "git worm clean --yes" in out
 
 
 def test_list_empty(git_repo, capsys):
@@ -288,7 +288,7 @@ def test_prune_merged_removes_merged_worktrees(git_repo, capsys):
     )
 
     assert wt_path.exists()
-    result = cli.root_command.execute(["prune", "--yes"])
+    result = cli.root_command.execute(["clean", "--yes"])
     assert result == 0
     assert not wt_path.exists()
     out = capsys.readouterr().out
@@ -301,7 +301,7 @@ def test_prune_removes_recent_missing_worktree(git_repo, capsys):
     wt_path = git_repo / ".worktrees" / "feat-missing"
     shutil.rmtree(wt_path)
 
-    result = cli.root_command.execute(["prune", "--yes"])
+    result = cli.root_command.execute(["clean", "--yes"])
 
     assert result == 0
     worktrees = subprocess.run(
@@ -328,11 +328,11 @@ def test_prune_merged_keeps_unmerged_worktrees(git_repo, capsys):
     )
 
     assert wt_path.exists()
-    result = cli.root_command.execute(["prune"])
+    result = cli.root_command.execute(["clean"])
     assert result == 0
     assert wt_path.exists()
     out = capsys.readouterr().out
-    assert "Nothing to prune." in out
+    assert "Nothing to clean." in out
 
 
 def test_prune_no_merged_keeps_merged_worktrees(git_repo, capsys):
@@ -356,7 +356,7 @@ def test_prune_no_merged_keeps_merged_worktrees(git_repo, capsys):
     assert result == 0
     assert wt_path.exists()
     out = capsys.readouterr().out
-    assert "Nothing to prune." in out
+    assert "Nothing to clean." in out
     assert "--no-merged" in out
 
 

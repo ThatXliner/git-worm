@@ -25,13 +25,13 @@ def _collect_merged(repo: Path) -> tuple[list[dict[str, str]], list[dict[str, st
     return prunable, dirty
 
 
-@command()
+@command("clean", "prune")
 def _(
     no_merged: Annotated[bool, Option(name="no-merged", description="Only prune stale refs; keep worktrees whose branches are merged")] = False,
     dry_run: Annotated[bool, Option(description="Show what would be done without making any changes")] = False,
     yes: Annotated[bool, Option(name="yes", description="Skip confirmation prompt")] = False,
 ) -> None:
-    """Remove stale worktree refs and merged worktrees.
+    """Remove merged worktrees and stale worktree refs.
 
     Runs `git worktree prune` to clean up refs for worktrees that have
     been deleted manually without using `git worm rm`, and removes
@@ -55,11 +55,11 @@ def _(
 
     if not stale_lines and not merged_worktrees:
         if no_merged and _collect_merged(repo)[0]:
-            console.print("[dim]Nothing to prune. You have merged worktrees — rerun without [bold]--no-merged[/bold] to remove them.[/dim]")
+            console.print("[dim]Nothing to clean. You have merged worktrees — rerun without [bold]--no-merged[/bold] to remove them.[/dim]")
         else:
             for wt in dirty_merged:
                 console.print(f"[yellow]Skipping merged worktree with uncommitted changes:[/yellow] [bold]{wt['branch']}[/bold] [dim]{wt['path']}[/dim]")
-            console.print("[dim]Nothing to prune.[/dim]")
+            console.print("[dim]Nothing to clean.[/dim]")
         return
 
     # Show what will be removed
@@ -80,7 +80,7 @@ def _(
 
     if not yes:
         console.print()
-        confirm = input("Prune the above? [y/N] ").strip().lower()
+        confirm = input("Remove the above? [y/N] ").strip().lower()
         if confirm != "y":
             console.print("[dim]Aborted.[/dim]")
             return
