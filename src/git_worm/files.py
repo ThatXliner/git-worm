@@ -10,6 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 from fnmatch import fnmatch
 from pathlib import Path
 
+from git import Repo
+
 from git_worm.config import ShareRule
 
 EXCLUDED_NAMES = {".git", ".worktrees"}
@@ -29,14 +31,17 @@ def _reflink_cmd(src: Path, dst: Path, *, recursive: bool = False) -> list[str]:
 
 def _has_tracked_files(repo: Path, directory: str) -> bool:
     """Check if a directory contains any files tracked by git."""
-    result = subprocess.run(
-        ["git", "ls-files", directory],
-        cwd=repo,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return bool(result.stdout.strip())
+    with Repo(repo, search_parent_directories=True) as git_repo:
+        return bool(git_repo.git.ls_files(directory).strip())
+
+
+def _ignored_paths(status_output: str) -> list[str]:
+    """Extract ignored paths from NUL-delimited porcelain status output."""
+    return [
+        record.removeprefix("!! ")
+        for record in status_output.split("\0")
+        if record.startswith("!! ")
+    ]
 
 
 def get_ignored_entries(repo: Path) -> list[Path]:
@@ -46,19 +51,14 @@ def get_ignored_entries(repo: Path) -> list[Path]:
     For tracked directories that contain ignored files, returns the
     individual ignored file paths instead.
     """
-    result = subprocess.run(
-        ["git", "status", "--ignored", "--porcelain"],
-        cwd=repo,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    with Repo(repo, search_parent_directories=True) as git_repo:
+        status_output = git_repo.git.status(
+            "--ignored", "--porcelain", "-z", "--no-renames"
+        )
     entries = []
     seen: set[str] = set()
-    for line in result.stdout.splitlines():
-        if not line.startswith("!! "):
-            continue
-        rel = line.removeprefix("!! ").rstrip("/")
+    for ignored_path in _ignored_paths(status_output):
+        rel = ignored_path.rstrip("/")
         top_level = rel.split("/")[0]
         if top_level in EXCLUDED_NAMES:
             continue
@@ -81,18 +81,13 @@ def get_ignored_entries(repo: Path) -> list[Path]:
 
 def _get_ignored_files_in(repo: Path, directory: str) -> list[Path]:
     """Get individual ignored file paths within a partially-tracked directory."""
-    result = subprocess.run(
-        ["git", "status", "--ignored", "--porcelain", directory],
-        cwd=repo,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    with Repo(repo, search_parent_directories=True) as git_repo:
+        status_output = git_repo.git.status(
+            "--ignored", "--porcelain", "-z", "--no-renames", "--", directory
+        )
     paths = []
-    for line in result.stdout.splitlines():
-        if not line.startswith("!! "):
-            continue
-        rel = line.removeprefix("!! ").rstrip("/")
+    for ignored_path in _ignored_paths(status_output):
+        rel = ignored_path.rstrip("/")
         path = repo / rel
         if path.exists():
             paths.append(path)

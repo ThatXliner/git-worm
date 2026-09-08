@@ -206,3 +206,23 @@ class TestEndToEnd:
 
         assert _run(["rm", "feat-e2e", "--yes"], repo).returncode == 0
         assert not (repo / ".worktrees" / "feat-e2e").exists()
+
+
+def test_workflow_from_nested_and_linked_worktree(repo):
+    (repo / "src").mkdir()
+    (repo / "src" / "tracked.txt").write_text("tracked")
+    (repo / ".gitignore").write_text("*.cache\n.worktrees/\n")
+    _git(["add", "."], repo)
+    _git(["commit", "-m", "nested files"], repo)
+    ignored = "résumé cache.cache"
+    (repo / "src" / ignored).write_text("cached content")
+
+    _run(["new", "nested-feature"], repo / "src")
+    wt = repo / ".worktrees" / "nested-feature"
+    assert (wt / "src" / ignored).read_text() == "cached content"
+    result = _run(["switch", "nested-feature", "--path"], wt / "src")
+    assert result.stdout.strip() == str(wt)
+    assert "nested-feature" in _run(["list"], wt / "src").stdout
+
+    _run(["rm", "nested-feature", "--yes"], repo / "src")
+    assert not wt.exists()

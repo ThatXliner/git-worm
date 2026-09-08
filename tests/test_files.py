@@ -170,3 +170,21 @@ def test_copy_ignored_files_matches_relative_paths(git_repo):
     )
     assert (dst / "src" / "cache.pyc").read_text() == "cache"
     assert results == [{"name": "src/cache.pyc", "action": "copied"}]
+
+
+def test_ignored_files_in_partially_tracked_directory_keep_spaces_and_unicode(git_repo):
+    directory = git_repo / "partially tracked"
+    directory.mkdir()
+    (directory / "tracked.txt").write_text("tracked")
+    ignored = directory / "caché résumé.txt"
+    ignored.write_text("ignored")
+    (git_repo / ".gitignore").write_text("partially tracked/*\n!partially tracked/tracked.txt\n")
+    subprocess.run(["git", "add", ".gitignore", str(directory / "tracked.txt")], cwd=git_repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "track partial directory"],
+        cwd=git_repo,
+        check=True,
+        capture_output=True,
+    )
+
+    assert get_ignored_entries(git_repo) == [ignored]

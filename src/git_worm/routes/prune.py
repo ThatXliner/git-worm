@@ -1,8 +1,14 @@
-import subprocess
 from pathlib import Path
 from typing import Annotated
 
-from git_worm.worktree import find_repo_root, is_dirty, is_merged, list_worktrees, remove_worktree
+from git_worm.worktree import (
+    find_repo_root,
+    is_dirty,
+    is_merged,
+    list_worktrees,
+    prune_worktrees,
+    remove_worktree,
+)
 from xclif import Option, command, console
 
 
@@ -40,13 +46,7 @@ def _(
     """
     repo = find_repo_root()
 
-    stale_result = subprocess.run(
-        ["git", "worktree", "prune", "--verbose", "--dry-run", "--expire=now"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    stale_lines = stale_result.stderr.strip().splitlines() if stale_result.stderr.strip() else []
+    stale_lines = prune_worktrees(cwd=repo, dry_run=True)
 
     merged_worktrees: list[dict[str, str]] = []
     dirty_merged: list[dict[str, str]] = []
@@ -86,7 +86,7 @@ def _(
             return
 
     if stale_lines:
-        subprocess.run(["git", "worktree", "prune", "--verbose", "--expire=now"], check=True, capture_output=True, text=True)
+        prune_worktrees(cwd=repo)
         for line in stale_lines:
             console.print(f"[dim]pruned:[/dim] {line}")
 

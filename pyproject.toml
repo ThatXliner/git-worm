@@ -19,6 +19,7 @@ classifiers = [
     "Topic :: Software Development :: Version Control :: Git",
 ]
 dependencies = [
+    "gitpython>=3.1.46",
     "xclif>=0.6.1",
 ]
 

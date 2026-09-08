@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
+
+from git import Repo
+from git.exc import GitCommandError, InvalidGitRepositoryError
 
 
 def branch_exists(branch: str) -> bool:
     """Return True if a local branch with this name already exists."""
-    result = subprocess.run(
-        ["git", "rev-parse", "--verify", f"refs/heads/{branch}"],
-        capture_output=True,
-        text=True,
-    )
-    return result.returncode == 0
+    with Repo(Path.cwd(), search_parent_directories=True) as repo:
+        return any(head.name == branch for head in repo.heads)
 
 
 def add_worktree(path: Path, branch: str, *, from_ref: str | None = None) -> bool:
@@ -26,28 +24,21 @@ def add_worktree(path: Path, branch: str, *, from_ref: str | None = None) -> boo
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     if branch_exists(branch):
-        subprocess.run(
-            ["git", "worktree", "add", str(path), branch],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+        with Repo(Path.cwd(), search_parent_directories=True) as repo:
+            repo.git.worktree("add", str(path), branch)
         return True
-    subprocess.run(
-        ["git", "worktree", "add", "-b", branch, str(path), from_ref or "HEAD"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
+    with Repo(Path.cwd(), search_parent_directories=True) as repo:
+        repo.git.worktree("add", "-b", branch, str(path), from_ref or "HEAD")
     return False
 
 
 def remove_worktree(path: Path, *, force: bool = False) -> None:
     """Remove a worktree."""
-    cmd = ["git", "worktree", "remove", str(path)]
+    args = ["remove", str(path)]
     if force:
-        cmd.append("--force")
-    subprocess.run(cmd, check=True, capture_output=True, text=True)
+        args.append("--force")
+    with Repo(Path.cwd(), search_parent_directories=True) as repo:
+        repo.git.worktree(*args)
 
 
 def find_worktree(branch: str, *, cwd: Path | None = None) -> dict[str, str] | None:
@@ -60,27 +51,24 @@ def find_worktree(branch: str, *, cwd: Path | None = None) -> dict[str, str] | N
 
 def list_worktrees(cwd: Path | None = None) -> list[dict[str, str]]:
     """List all worktrees. Returns list of dicts with 'path', 'head', 'branch' keys."""
-    result = subprocess.run(
-        ["git", "worktree", "list", "--porcelain"],
-        check=True,
-        capture_output=True,
-        text=True,
-        cwd=cwd,
-    )
+    with Repo(Path.cwd() if cwd is None else cwd, search_parent_directories=True) as repo:
+        output = repo.git.worktree("list", "--porcelain", "-z")
     worktrees = []
     current: dict[str, str] = {}
-    for line in result.stdout.splitlines():
-        if line.startswith("worktree "):
+    for field in output.split("\0"):
+        if not field:
+            continue
+        if field.startswith("worktree "):
             if current:
                 worktrees.append(current)
-            current = {"path": str(Path(line.removeprefix("worktree ")))}
-        elif line.startswith("HEAD "):
-            current["head"] = line.removeprefix("HEAD ")
-        elif line.startswith("branch "):
-            current["branch"] = line.removeprefix("branch ").removeprefix("refs/heads/")
-        elif line == "bare":
+            current = {"path": str(Path(field.removeprefix("worktree ")))}
+        elif field.startswith("HEAD "):
+            current["head"] = field.removeprefix("HEAD ")
+        elif field.startswith("branch "):
+            current["branch"] = field.removeprefix("branch ").removeprefix("refs/heads/")
+        elif field == "bare":
             current["bare"] = "true"
-        elif line == "detached":
+        elif field == "detached":
             current["detached"] = "true"
     if current:
         worktrees.append(current)
@@ -89,13 +77,10 @@ def list_worktrees(cwd: Path | None = None) -> list[dict[str, str]]:
 
 def find_repo_root() -> Path:
     """Find the git repo root from cwd."""
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return Path(result.stdout.strip())
+    with Repo(Path.cwd(), search_parent_directories=True) as repo:
+        if repo.bare or repo.working_tree_dir is None:
+            raise InvalidGitRepositoryError("Cannot find a working tree for a bare repository")
+        return Path(repo.working_tree_dir)
 
 
 def get_default_branch(cwd: Path | None = None) -> str:
@@ -105,14 +90,14 @@ def get_default_branch(cwd: Path | None = None) -> str:
     1. refs/remotes/origin/HEAD (remote's default branch)
     2. Primary worktree's branch (local default when no remote)
     """
-    result = subprocess.run(
-        ["git", "symbolic-ref", "refs/remotes/origin/HEAD"],
-        capture_output=True,
-        text=True,
-        cwd=cwd,
-    )
-    if result.returncode == 0:
-        return result.stdout.strip().removeprefix("refs/remotes/origin/")
+    repo_path = Path.cwd() if cwd is None else cwd
+    try:
+        with Repo(repo_path, search_parent_directories=True) as repo:
+            remote_head = repo.git.symbolic_ref("refs/remotes/origin/HEAD")
+    except GitCommandError:
+        remote_head = None
+    if remote_head is not None:
+        return remote_head.strip().removeprefix("refs/remotes/origin/")
     worktrees = list_worktrees(cwd=cwd)
     if worktrees and "branch" in worktrees[0]:
         return worktrees[0]["branch"]
@@ -124,21 +109,26 @@ def is_merged(branch: str, cwd: Path | None = None) -> bool:
     default = get_default_branch(cwd=cwd)
     if branch == default:
         return False
-    result = subprocess.run(
-        ["git", "merge-base", "--is-ancestor", branch, default],
-        capture_output=True,
-        cwd=cwd,
-    )
-    return result.returncode == 0
+    with Repo(Path.cwd() if cwd is None else cwd, search_parent_directories=True) as repo:
+        try:
+            return repo.is_ancestor(branch, default)
+        except GitCommandError:
+            return False
 
 
 def is_dirty(path: Path) -> bool:
     """Check if a worktree has uncommitted changes."""
-    result = subprocess.run(
-        ["git", "status", "--porcelain"],
-        cwd=path,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return bool(result.stdout.strip())
+    with Repo(path, search_parent_directories=True) as repo:
+        return repo.is_dirty(untracked_files=True)
+
+
+def prune_worktrees(cwd: Path | None = None, *, dry_run: bool = False) -> list[str]:
+    """Prune stale worktree references and return verbose output lines."""
+    args = ["prune"]
+    if dry_run:
+        args.append("--dry-run")
+    args.extend(["--verbose", "--expire=now"])
+    with Repo(Path.cwd() if cwd is None else cwd, search_parent_directories=True) as repo:
+        _, stdout, stderr = repo.git.worktree(*args, with_extended_output=True)
+    output = "\n".join(part for part in (stderr, stdout) if part)
+    return output.strip().splitlines() if output.strip() else []

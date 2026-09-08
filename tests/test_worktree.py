@@ -1,6 +1,20 @@
+import shutil
 import subprocess
 
-from git_worm.worktree import add_worktree, remove_worktree, list_worktrees, is_dirty, is_merged, get_default_branch
+import pytest
+from git.exc import GitCommandError, InvalidGitRepositoryError
+
+from git_worm.worktree import (
+    add_worktree,
+    branch_exists,
+    find_repo_root,
+    get_default_branch,
+    is_dirty,
+    is_merged,
+    list_worktrees,
+    prune_worktrees,
+    remove_worktree,
+)
 
 
 def test_add_worktree_creates_directory(git_repo):
@@ -47,6 +61,95 @@ def test_is_dirty_with_changes(git_repo):
 def test_is_dirty_with_tracked_changes(git_repo):
     (git_repo / "README.md").write_text("dirty")
     assert is_dirty(git_repo)
+
+
+def test_is_dirty_with_staged_changes_and_ignores_ignored_files(git_repo):
+    (git_repo / ".gitignore").write_text("ignored.txt\n")
+    subprocess.run(["git", "add", ".gitignore"], cwd=git_repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "add gitignore"],
+        cwd=git_repo,
+        check=True,
+        capture_output=True,
+    )
+    (git_repo / "ignored.txt").write_text("ignored")
+    assert not is_dirty(git_repo)
+
+    (git_repo / "README.md").write_text("staged")
+    subprocess.run(["git", "add", "README.md"], cwd=git_repo, check=True, capture_output=True)
+    assert is_dirty(git_repo)
+
+
+def test_branch_exists_only_checks_local_branches(git_repo):
+    branch = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=git_repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    subprocess.run(["git", "tag", "v1"], cwd=git_repo, check=True, capture_output=True)
+
+    assert branch_exists(branch)
+    assert not branch_exists("v1")
+
+
+def test_find_repo_root_from_nested_directory(git_repo, monkeypatch):
+    nested = git_repo / "nested" / "directory"
+    nested.mkdir(parents=True)
+    monkeypatch.chdir(nested)
+
+    assert find_repo_root() == git_repo
+
+
+def test_find_repo_root_rejects_bare_repo(tmp_path, monkeypatch):
+    bare = tmp_path / "bare.git"
+    subprocess.run(["git", "init", "--bare", str(bare)], check=True, capture_output=True)
+    monkeypatch.chdir(bare)
+
+    with pytest.raises(InvalidGitRepositoryError):
+        find_repo_root()
+
+
+def test_list_worktrees_marks_detached_worktree(git_repo):
+    wt_path = git_repo / ".worktrees" / "detached"
+    add_worktree(wt_path, "detached")
+    subprocess.run(
+        ["git", "checkout", "--detach", "HEAD"],
+        cwd=wt_path,
+        check=True,
+        capture_output=True,
+    )
+
+    worktree = next(wt for wt in list_worktrees() if wt["path"] == str(wt_path))
+    assert worktree.get("detached") == "true"
+    assert "branch" not in worktree
+
+
+def test_remove_dirty_worktree_requires_force(git_repo):
+    wt_path = git_repo / ".worktrees" / "dirty"
+    add_worktree(wt_path, "dirty")
+    (wt_path / "untracked.txt").write_text("dirty")
+
+    with pytest.raises(GitCommandError):
+        remove_worktree(wt_path)
+
+    remove_worktree(wt_path, force=True)
+    assert not wt_path.exists()
+
+
+def test_prune_worktrees_dry_run_then_removes_stale_ref(git_repo):
+    wt_path = git_repo / ".worktrees" / "stale"
+    add_worktree(wt_path, "stale")
+    shutil.rmtree(wt_path)
+
+    dry_run_lines = prune_worktrees(cwd=git_repo, dry_run=True)
+    assert dry_run_lines
+    assert any("stale" in line for line in dry_run_lines)
+    assert any(wt.get("branch") == "stale" for wt in list_worktrees(cwd=git_repo))
+
+    prune_worktrees(cwd=git_repo)
+    assert all(wt.get("branch") != "stale" for wt in list_worktrees(cwd=git_repo))
 
 
 def test_get_default_branch_no_remote(git_repo):
