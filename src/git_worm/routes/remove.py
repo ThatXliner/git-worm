@@ -62,9 +62,15 @@ def _(
             console.print("[dim]Aborted.[/dim]")
             return
 
+    removed = []
     for b, wt_path in to_remove:
         remove_worktree(wt_path, force=force)
-        console.print(f"[bold green]Removed worktree[/bold green] [bold]{b}[/bold]")
+        removed.append(b)
+
+    if removed:
+        console.print(f"[bold green]Removed ({len(removed)})[/bold green]")
+        for name in removed:
+            console.print(f"  [red]-[/red] [bold]{name}[/bold]")
 
     if failed:
         return 1

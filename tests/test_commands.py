@@ -37,6 +37,9 @@ def test_new_copies_gitignored_files(git_repo, capsys):
     result = cli.root_command.execute(["new", "feat-env"])
     assert result == 0
     assert (git_repo / ".worktrees" / "feat-env" / ".env").read_text() == "SECRET=42"
+    out = capsys.readouterr().out
+    assert "Copied (1)" in out
+    assert "+ .env" in out
 
 
 def test_new_creates_worktree_gitignore(git_repo, capsys):
@@ -62,10 +65,30 @@ def test_rm_removes_worktree(git_repo, capsys):
     cli = _make_cli()
     cli.root_command.execute(["new", "feat-rm"])
     assert (git_repo / ".worktrees" / "feat-rm").exists()
+    capsys.readouterr()
 
     result = cli.root_command.execute(["rm", "feat-rm", "--yes"])
     assert result == 0
     assert not (git_repo / ".worktrees" / "feat-rm").exists()
+    out = capsys.readouterr().out
+    assert "Removed (1)" in out
+    assert "- feat-rm" in out
+
+
+def test_rm_removes_multiple_worktrees(git_repo, capsys):
+    cli = _make_cli()
+    cli.root_command.execute(["new", "feat-rm-one", "feat-rm-two"])
+    capsys.readouterr()
+
+    result = cli.root_command.execute(["rm", "feat-rm-one", "feat-rm-two", "--yes"])
+
+    assert result == 0
+    out = capsys.readouterr().out
+    assert "Removed (2)" in out
+    assert "- feat-rm-one" in out
+    assert "- feat-rm-two" in out
+    assert not (git_repo / ".worktrees" / "feat-rm-one").exists()
+    assert not (git_repo / ".worktrees" / "feat-rm-two").exists()
 
 
 def test_rm_dirty_worktree_without_force(git_repo, capsys):
@@ -288,10 +311,13 @@ def test_prune_merged_removes_merged_worktrees(git_repo, capsys):
     )
 
     assert wt_path.exists()
+    capsys.readouterr()
     result = cli.root_command.execute(["clean", "--yes"])
     assert result == 0
     assert not wt_path.exists()
     out = capsys.readouterr().out
+    assert "Pruned (1)" in out
+    assert "- feat-merged" in out
     assert "feat-merged" in out
 
 
@@ -301,9 +327,12 @@ def test_prune_removes_recent_missing_worktree(git_repo, capsys):
     wt_path = git_repo / ".worktrees" / "feat-missing"
     shutil.rmtree(wt_path)
 
+    capsys.readouterr()
     result = cli.root_command.execute(["clean", "--yes"])
 
     assert result == 0
+    out = capsys.readouterr().out
+    assert "Pruned (1)" in out
     worktrees = subprocess.run(
         ["git", "worktree", "list", "--porcelain"],
         cwd=git_repo,

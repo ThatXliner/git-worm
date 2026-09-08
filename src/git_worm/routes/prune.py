@@ -85,12 +85,22 @@ def _(
             console.print("[dim]Aborted.[/dim]")
             return
 
+    pruned_stale = []
     if stale_lines:
         subprocess.run(["git", "worktree", "prune", "--verbose", "--expire=now"], check=True, capture_output=True, text=True)
-        for line in stale_lines:
-            console.print(f"[dim]pruned:[/dim] {line}")
+        pruned_stale = stale_lines
 
+    pruned_merged = []
     for wt in merged_worktrees:
         path = Path(wt["path"])
         remove_worktree(path)
-        console.print(f"[bold green]Removed merged worktree[/bold green] [bold]{wt['branch']}[/bold]")
+        pruned_merged.append(wt)
+
+    if pruned_stale or pruned_merged:
+        console.print(f"[bold green]Pruned ({len(pruned_stale) + len(pruned_merged)})[/bold green]")
+        for line in pruned_stale:
+            console.print(f"  [red]-[/red] [dim]{line}[/dim]")
+        for wt in pruned_merged:
+            console.print(f"  [red]-[/red] [bold]{wt['branch']}[/bold]")
+    else:
+        console.print("[dim]Nothing pruned.[/dim]")
